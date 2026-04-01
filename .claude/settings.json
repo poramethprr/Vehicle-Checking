@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(timeout 5 node src/index.js)",
+      "Bash(find c:/Users/Porameth.P/Documents/GitHub/Vehicle-Checking -name *.png -o -name *.jpg -o -name *.jpeg)",
+      "Bash(npm run:*)",
+      "Bash(npm ls:*)",
+      "Bash(find c:/Users/Porameth.P/Documents/GitHub/Vehicle-Checking/backend -name *.ttf)",
+      "Bash(node -e \":*)",
+      "Bash(node -c src/routes/export.js)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(node --check src/index.js)",
+      "Bash(node --check src/routes/bookings.js)",
+      "Bash(node --check src/routes/vehicles.js)",
+      "Bash(node --check src/routes/export.js)",
+      "Bash(node -e \"const p = require\\(''@prisma/client''\\); const v = new p.PrismaClient\\(\\); console.log\\(''insThaiInsurance'' in p.Prisma.VehicleScalarFieldEnum ? ''✓ field exists'' : ''✗ missing''\\)\")",
+      "Bash(node -e \"const {PrismaClient} = require\\(''@prisma/client''\\); console.log\\(Object.keys\\(require\\(''@prisma/client''\\).Prisma.VehicleScalarFieldEnum\\).filter\\(k=>k.startsWith\\(''ins''\\)\\)\\)\")"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Porameth.P\\Documents\\GitHub\\Vehicle-Checking"
+    ]
+  }
+}

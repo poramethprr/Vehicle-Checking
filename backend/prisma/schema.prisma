@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum InspectionStatus {
+  NORMAL
+  ABNORMAL
+}
+
+enum VehicleStatus {
+  ACTIVE
+  IN_USE
+  MAINTENANCE
+  INACTIVE
+}
+
+enum BookingStatus {
+  CHECKED_OUT
+  RETURNED
+  CANCELLED
+}
+
+model User {
+  id          Int          @id @default(autoincrement())
+  username    String
+  phone       String       @unique
+  role        Role         @default(STAFF)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  inspections       Inspection[]
+  activityLogs      ActivityLog[]
+  bookingsRequested Booking[]     @relation("BookingRequester")
+  bookingsDriven    Booking[]     @relation("BookingDriver")
+}
+
+model Vehicle {
+  id              Int            @id @default(autoincrement())
+  type            String
+  licensePlate    String         @unique
+  chassisNumber   String?
+  engineNumber    String?
+  currentMileage  Float?
+  nextMileage     Float?
+  overMileage     Float?
+  status          VehicleStatus  @default(ACTIVE)
+  note            String?
+
+  // พ.ร.บ.
+  prbDate               DateTime?
+  prbLmg                Boolean        @default(false)
+  prbViriya             Boolean        @default(false)
+  prbAkney              Boolean        @default(false)
+  prbThewet             Boolean        @default(false)
+  prbInsurance          Boolean        @default(false)
+  prbBangkokInsurance   Boolean        @default(false)
+  prbTaxDate            DateTime?
+  prbThirdParty         Boolean        @default(false)
+  prbExpiry             DateTime?
+
+  // รอบต่อประกัน
+  insLmg                Boolean        @default(false)
+  insViriya             Boolean        @default(false)
+  insThaiInsurance      Boolean        @default(false)
+  insInsurance          Boolean        @default(false)
+  insAkney              Boolean        @default(false)
+  insThewet             Boolean        @default(false)
+  insBangkokInsurance   Boolean        @default(false)
+  insDate               DateTime?
+  insTaxDate            DateTime?
+  insExpiry             DateTime?
+
+  taxRenewalDate  DateTime?
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  inspections     Inspection[]
+  bookings        Booking[]
+}
+
+model Booking {
+  id              Int            @id @default(autoincrement())
+  vehicleId       Int
+  requesterId     Int            // คนทำเรื่องเบิก
+  driverId        Int            // คนขับ
+  status          BookingStatus  @default(CHECKED_OUT)
+
+  // ข้อมูลเบิก (checkout)
+  destination     String         // สถานที่ที่ไปใช้รถ
+  purpose         String?        // วัตถุประสงค์
+  checkoutDate    DateTime       @default(now())
+  mileageOut      Float          // เลขไมล์ตอนออก
+  mileageOutPhoto String?        // path รูปไมล์ตอนออก
+
+  // ข้อมูลคืน (return)
+  returnDate      DateTime?
+  mileageIn       Float?         // เลขไมล์ตอนกลับ
+  mileageInPhoto  String?        // path รูปไมล์ตอนกลับ
+  distance        Float?         // ระยะทาง (คำนวณอัตโนมัติ = mileageIn - mileageOut)
+  returnNote      String?        // หมายเหตุตอนคืน
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  vehicle         Vehicle        @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  requester       User           @relation("BookingRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  driver          User           @relation("BookingDriver", fields: [driverId], references: [id], onDelete: Cascade)
+}
+
+model Inspection {
+  id              Int               @id @default(autoincrement())
+  vehicleId       Int
+  userId          Int
+  inspectionDate  DateTime
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  vehicle         Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  details         InspectionDetail[]
+
+  @@unique([vehicleId, inspectionDate])
+}
+
+model InspectionDetail {
+  id            Int              @id @default(autoincrement())
+  inspectionId  Int
+  itemNumber    Int
+  itemName      String
+  status        InspectionStatus
+  abnormalNote  String?
+
+  inspection    Inspection       @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+
+  @@unique([inspectionId, itemNumber])
+}
+
+model ActivityLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  action      String
+  detail      String
+  entityType  String?
+  entityId    Int?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

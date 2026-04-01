@@ -1,0 +1,26 @@
+{
+  "vue.complete.casing.tags": "autoCased",
+  "vue.complete.casing.props": "autoCased",
+  "[vue]": {
+    "editor.defaultFormatter": "Vue.volar"
+  },
+  "files.associations": {
+    "*.vue": "vue"
+  },
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "tailwindCSS.experimental.classRegex": [
+    ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+    ["class\\s*=\\s*[\"']([^\"']*)[\"']", "([^\\s\"']*)"]
+  ],
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma",
+    "editor.formatOnSave": true
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}

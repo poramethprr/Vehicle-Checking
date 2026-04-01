@@ -1,0 +1,30 @@
+{
+  "name": "vehicle-checking-backend",
+  "version": "1.0.0",
+  "description": "Vehicle Checking System - Backend API",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "stop": "npx kill-port 8099",
+    "prisma:generate": "npx kill-port 8099 && npx prisma generate",
+    "prisma:migrate": "npx kill-port 8099 && npx prisma migrate dev",
+    "prisma:push": "npx kill-port 8099 && npx prisma db push",
+    "prisma:studio": "npx prisma studio",
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "exceljs": "^4.4.0",
+    "express": "^4.21.2",
+    "multer": "^2.1.1",
+    "pdfkit": "^0.18.0"
+  },
+  "devDependencies": {
+    "kill-port": "^2.0.1",
+    "nodemon": "^3.1.9",
+    "prisma": "^6.6.0"
+  }
+}
