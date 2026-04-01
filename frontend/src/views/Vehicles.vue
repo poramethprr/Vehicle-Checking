@@ -14,7 +14,8 @@
           class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2.5 rounded-xl transition-all text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-1.5">
           <ArrowDownTrayIcon class="w-4 h-4" /> Export
         </button>
-        <label class="bg-slate-500 hover:bg-slate-600 text-white font-semibold px-4 py-2.5 rounded-xl transition-all text-sm shadow-sm hover:shadow-md active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
+        <label
+          class="bg-slate-500 hover:bg-slate-600 text-white font-semibold px-4 py-2.5 rounded-xl transition-all text-sm shadow-sm hover:shadow-md active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
           <ArrowUpTrayIcon class="w-4 h-4" /> Import
           <input type="file" accept=".xlsx,.xls" @change="importVehicles" class="hidden" />
         </label>
@@ -25,10 +26,12 @@
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 mb-5 overflow-visible">
       <div class="flex flex-col sm:flex-row gap-3">
         <div class="relative flex-1">
-          <MagnifyingGlassIcon class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <MagnifyingGlassIcon
+            class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input v-model="searchQuery" placeholder="ค้นหาทะเบียน, ประเภท, เลขตัวถัง, เลขเครื่อง..."
             class="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white outline-none text-sm transition" />
-          <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+          <button v-if="searchQuery" @click="searchQuery = ''"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
             <XCircleIcon class="w-4 h-4" />
           </button>
         </div>
@@ -53,8 +56,8 @@
       </div>
 
       <!-- Mobile: Cards -->
-      <div class="sm:hidden divide-y divide-gray-50" v-if="filteredVehicles.length">
-        <div v-for="v in filteredVehicles" :key="v.id" class="px-4 py-3.5">
+      <div class="sm:hidden divide-y divide-gray-50" v-if="paginatedVehicles.length">
+        <div v-for="v in paginatedVehicles" :key="v.id" class="px-4 py-3.5">
           <div class="flex items-center gap-3 mb-2">
             <div :class="statusColor(v.status)" class="w-10 h-10 rounded-xl flex items-center justify-center">
               <TruckIcon class="w-5 h-5" />
@@ -68,16 +71,20 @@
             <div v-if="v.chassisNumber"><span class="text-slate-400">ตัวถัง:</span> {{ v.chassisNumber }}</div>
             <div v-if="v.engineNumber"><span class="text-slate-400">เครื่อง:</span> {{ v.engineNumber }}</div>
             <div v-if="v.currentMileage"><span class="text-slate-400">ไมล์:</span> {{ num(v.currentMileage) }}</div>
-            <div v-if="v.taxRenewalDate"><span class="text-slate-400">ต่อภาษี:</span> {{ fmtDate(v.taxRenewalDate) }}</div>
+            <div v-if="v.taxRenewalDate"><span class="text-slate-400">ต่อภาษี:</span> {{ fmtDate(v.taxRenewalDate) }}
+            </div>
           </div>
           <div class="flex gap-2">
-            <button @click="openForm(v)" class="flex-1 flex items-center justify-center gap-1 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold py-2 rounded-xl transition ring-1 ring-amber-200">
+            <button @click="openForm(v)"
+              class="flex-1 flex items-center justify-center gap-1 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold py-2 rounded-xl transition ring-1 ring-amber-200">
               <PencilSquareIcon class="w-3.5 h-3.5" /> แก้ไข
             </button>
-            <button @click="openDetail(v)" class="flex-1 flex items-center justify-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold py-2 rounded-xl transition ring-1 ring-blue-200">
+            <button @click="openDetail(v)"
+              class="flex-1 flex items-center justify-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold py-2 rounded-xl transition ring-1 ring-blue-200">
               <EyeIcon class="w-3.5 h-3.5" /> ดูข้อมูล
             </button>
-            <button @click="confirmDelete(v)" class="flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold py-2 px-3 rounded-xl transition ring-1 ring-red-200">
+            <button @click="confirmDelete(v)"
+              class="flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold py-2 px-3 rounded-xl transition ring-1 ring-red-200">
               <TrashIcon class="w-3.5 h-3.5" />
             </button>
           </div>
@@ -85,82 +92,141 @@
       </div>
 
       <!-- Desktop: Table -->
-      <div class="hidden sm:block overflow-x-auto" v-if="filteredVehicles.length">
+      <div class="hidden sm:block overflow-x-auto" v-if="paginatedVehicles.length">
         <table class="w-full">
-          <thead><tr class="bg-slate-50/50">
-            <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase">ยานพาหนะ</th>
-            <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase">ทะเบียน</th>
-            <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase">เลขตัวถัง</th>
-            <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase">เลขเครื่อง</th>
-            <th class="text-right py-3 px-4 text-xs font-semibold text-slate-400 uppercase">ไมล์ปัจจุบัน</th>
-            <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 uppercase">สถานะ</th>
-            <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 uppercase">ต่อภาษี</th>
-            <th class="text-right py-3 px-4 text-xs font-semibold text-slate-400 uppercase">จัดการ</th>
-          </tr></thead>
+          <thead>
+            <tr class="bg-slate-50/50">
+              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase">ยานพาหนะ</th>
+              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase">ทะเบียน</th>
+              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase">เลขตัวถัง</th>
+              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase">เลขเครื่อง</th>
+              <th class="text-right py-3 px-4 text-xs font-semibold text-slate-400 uppercase">ไมล์ปัจจุบัน</th>
+              <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 uppercase">สถานะ</th>
+              <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 uppercase">ต่อภาษี</th>
+              <th class="text-right py-3 px-4 text-xs font-semibold text-slate-400 uppercase">จัดการ</th>
+            </tr>
+          </thead>
           <tbody class="divide-y divide-gray-50">
-            <tr v-for="v in filteredVehicles" :key="v.id" class="hover:bg-slate-50/50 transition">
-              <td class="py-3 px-4"><div class="flex items-center gap-2">
-                <div :class="statusColor(v.status)" class="w-8 h-8 rounded-lg flex items-center justify-center">
-                  <TruckIcon class="w-4 h-4" />
+            <tr v-for="v in paginatedVehicles" :key="v.id" class="hover:bg-slate-50/50 transition">
+              <td class="py-3 px-4">
+                <div class="flex items-center gap-2">
+                  <div :class="statusColor(v.status)" class="w-8 h-8 rounded-lg flex items-center justify-center">
+                    <TruckIcon class="w-4 h-4" />
+                  </div>
+                  <span class="text-sm font-medium text-slate-800">{{ v.type }}</span>
                 </div>
-                <span class="text-sm font-medium text-slate-800">{{ v.type }}</span>
-              </div></td>
+              </td>
               <td class="py-3 px-4 text-sm font-semibold text-slate-700">{{ v.licensePlate }}</td>
               <td class="py-3 px-4 text-xs text-slate-500">{{ v.chassisNumber || '-' }}</td>
               <td class="py-3 px-4 text-xs text-slate-500">{{ v.engineNumber || '-' }}</td>
-              <td class="py-3 px-4 text-sm text-right text-slate-600">{{ v.currentMileage ? num(v.currentMileage) : '-' }}</td>
+              <td class="py-3 px-4 text-sm text-right text-slate-600">{{ v.currentMileage ? num(v.currentMileage) : '-'
+                }}</td>
               <td class="py-3 px-4 text-center">
-                <span :class="statusBadge(v.status)" class="text-xs font-semibold px-2 py-0.5 rounded-full">{{ statusLabel(v.status) }}</span>
+                <span :class="statusBadge(v.status)" class="text-xs font-semibold px-2 py-0.5 rounded-full">{{
+                  statusLabel(v.status) }}</span>
               </td>
-              <td class="py-3 px-4 text-center text-xs text-slate-500">{{ v.taxRenewalDate ? fmtDate(v.taxRenewalDate) : '-' }}</td>
+              <td class="py-3 px-4 text-center text-xs text-slate-500">{{ v.taxRenewalDate ? fmtDate(v.taxRenewalDate) :
+                '-' }}</td>
               <td class="py-3 px-4 text-right whitespace-nowrap">
-                <button @click="openDetail(v)" class="text-blue-600 hover:bg-blue-50 text-xs font-semibold px-2 py-1.5 rounded-lg transition inline-flex items-center gap-1"><EyeIcon class="w-3.5 h-3.5" /></button>
-                <button @click="openForm(v)" class="text-amber-600 hover:bg-amber-50 text-xs font-semibold px-2 py-1.5 rounded-lg transition inline-flex items-center gap-1"><PencilSquareIcon class="w-3.5 h-3.5" /></button>
-                <button @click="confirmDelete(v)" class="text-red-600 hover:bg-red-50 text-xs font-semibold px-2 py-1.5 rounded-lg transition inline-flex items-center gap-1"><TrashIcon class="w-3.5 h-3.5" /></button>
+                <button @click="openDetail(v)"
+                  class="text-blue-600 hover:bg-blue-50 text-xs font-semibold px-2 py-1.5 rounded-lg transition inline-flex items-center gap-1">
+                  <EyeIcon class="w-3.5 h-3.5" />
+                </button>
+                <button @click="openForm(v)"
+                  class="text-amber-600 hover:bg-amber-50 text-xs font-semibold px-2 py-1.5 rounded-lg transition inline-flex items-center gap-1">
+                  <PencilSquareIcon class="w-3.5 h-3.5" />
+                </button>
+                <button @click="confirmDelete(v)"
+                  class="text-red-600 hover:bg-red-50 text-xs font-semibold px-2 py-1.5 rounded-lg transition inline-flex items-center gap-1">
+                  <TrashIcon class="w-3.5 h-3.5" />
+                </button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <AppEmpty v-if="!filteredVehicles.length && vehicles.length" :icon="MagnifyingGlassIcon" title="ไม่พบยานพาหนะ" subtitle="ลองเปลี่ยนคำค้นหาหรือตัวกรอง" />
-      <AppEmpty v-if="!vehicles.length" :icon="TruckIcon" title="ยังไม่มียานพาหนะ" subtitle="กดปุ่ม 'เพิ่มยานพาหนะ' เพื่อเริ่มต้น" />
+      <AppEmpty v-if="!filteredVehicles.length && vehicles.length" :icon="MagnifyingGlassIcon" title="ไม่พบยานพาหนะ"
+        subtitle="ลองเปลี่ยนคำค้นหาหรือตัวกรอง" />
+      <AppEmpty v-if="!vehicles.length" :icon="TruckIcon" title="ยังไม่มียานพาหนะ"
+        subtitle="กดปุ่ม 'เพิ่มยานพาหนะ' เพื่อเริ่มต้น" />
+
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" class="flex items-center justify-between px-5 py-3 border-t border-gray-100">
+        <span class="text-xs text-slate-400">
+          แสดง {{ (currentPage - 1) * pageSize + 1 }}–{{ Math.min(currentPage * pageSize, filteredVehicles.length) }}
+          จาก {{ filteredVehicles.length }} รายการ
+        </span>
+        <div class="flex items-center gap-1">
+          <button @click="currentPage--" :disabled="currentPage === 1"
+            class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition text-sm font-medium">
+            ‹
+          </button>
+          <template v-for="p in totalPages" :key="p">
+            <button @click="currentPage = p"
+              :class="[p === currentPage ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100', 'w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition']">
+              {{ p }}
+            </button>
+          </template>
+          <button @click="currentPage++" :disabled="currentPage === totalPages"
+            class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition text-sm font-medium">
+            ›
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Detail Modal -->
     <TransitionRoot :show="!!detailVehicle" as="template">
       <Dialog @close="detailVehicle = null" class="relative z-50">
-        <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
+        <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
+          leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
           <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" />
         </TransitionChild>
         <div class="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-full sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100"
-            leave="ease-in duration-200" leave-from="opacity-100 sm:scale-100" leave-to="opacity-0 translate-y-full sm:scale-95">
-            <DialogPanel class="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto">
-              <div class="sticky top-0 bg-white border-b px-5 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl">
+          <TransitionChild as="template" enter="ease-out duration-300"
+            enter-from="opacity-0 translate-y-full sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100"
+            leave="ease-in duration-200" leave-from="opacity-100 sm:scale-100"
+            leave-to="opacity-0 translate-y-full sm:scale-95">
+            <DialogPanel
+              class="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto">
+              <div
+                class="sticky top-0 bg-white border-b px-5 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl">
                 <DialogTitle class="font-bold text-slate-800">ข้อมูลยานพาหนะ</DialogTitle>
-                <button @click="detailVehicle = null" class="p-1 hover:bg-slate-100 rounded-lg"><XMarkIcon class="w-5 h-5 text-slate-400" /></button>
+                <button @click="detailVehicle = null" class="p-1 hover:bg-slate-100 rounded-lg">
+                  <XMarkIcon class="w-5 h-5 text-slate-400" />
+                </button>
               </div>
               <div class="p-5 space-y-4" v-if="detailVehicle">
                 <div class="flex items-center gap-3 mb-2">
-                  <div :class="statusColor(detailVehicle.status)" class="w-12 h-12 rounded-xl flex items-center justify-center"><TruckIcon class="w-6 h-6" /></div>
+                  <div :class="statusColor(detailVehicle.status)"
+                    class="w-12 h-12 rounded-xl flex items-center justify-center">
+                    <TruckIcon class="w-6 h-6" />
+                  </div>
                   <div>
                     <div class="font-bold text-lg text-slate-800">{{ detailVehicle.licensePlate }}</div>
                     <div class="text-sm text-slate-400">{{ detailVehicle.type }}</div>
                   </div>
-                  <span :class="statusBadge(detailVehicle.status)" class="ml-auto text-xs font-semibold px-3 py-1 rounded-full">{{ statusLabel(detailVehicle.status) }}</span>
+                  <span :class="statusBadge(detailVehicle.status)"
+                    class="ml-auto text-xs font-semibold px-3 py-1 rounded-full">{{ statusLabel(detailVehicle.status)
+                    }}</span>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                   <InfoItem label="เลขตัวถัง" :value="detailVehicle.chassisNumber" />
                   <InfoItem label="เลขเครื่องยนต์" :value="detailVehicle.engineNumber" />
-                  <InfoItem label="ไมล์ปัจจุบัน" :value="detailVehicle.currentMileage ? num(detailVehicle.currentMileage) : null" />
-                  <InfoItem label="ไมล์ครั้งต่อไป" :value="detailVehicle.nextMileage ? num(detailVehicle.nextMileage) : null" />
-                  <InfoItem label="ระยะที่เกิน" :value="detailVehicle.overMileage ? num(detailVehicle.overMileage) : null" />
-                  <InfoItem label="รอบต่อภาษี" :value="detailVehicle.taxRenewalDate ? fmtDate(detailVehicle.taxRenewalDate) : null" />
+                  <InfoItem label="ไมล์ปัจจุบัน"
+                    :value="detailVehicle.currentMileage ? num(detailVehicle.currentMileage) : null" />
+                  <InfoItem label="ไมล์ครั้งต่อไป"
+                    :value="detailVehicle.nextMileage ? num(detailVehicle.nextMileage) : null" />
+                  <InfoItem label="ระยะที่เกิน"
+                    :value="detailVehicle.overMileage ? num(detailVehicle.overMileage) : null" />
+                  <InfoItem label="รอบต่อภาษี"
+                    :value="detailVehicle.taxRenewalDate ? fmtDate(detailVehicle.taxRenewalDate) : null" />
                 </div>
 
-                <div v-if="detailVehicle.note" class="bg-amber-50 border border-amber-100 rounded-xl p-3 text-sm text-amber-800">
+                <div v-if="detailVehicle.note"
+                  class="bg-amber-50 border border-amber-100 rounded-xl p-3 text-sm text-amber-800">
                   <span class="font-semibold">หมายเหตุ:</span> {{ detailVehicle.note }}
                 </div>
 
@@ -174,9 +240,8 @@
                     <BoolItem label="ประกันคุ้มภัย" :val="detailVehicle.prbInsurance" />
                     <BoolItem label="กรุงเทพประกันภัย" :val="detailVehicle.prbBangkokInsurance" />
                     <BoolItem label="ทำประกันภัย" :val="detailVehicle.prbThirdParty" />
-                    <InfoItem label="วันหมดอายุ พ.ร.บ." :value="detailVehicle.prbExpiry ? fmtDate(detailVehicle.prbExpiry) : null" />
-                    <InfoItem label="ต่อภาษี" :value="detailVehicle.prbTaxDate ? fmtDate(detailVehicle.prbTaxDate) : null" />
-                    <InfoItem label="วัน พ.ร.บ." :value="detailVehicle.prbDate ? fmtDate(detailVehicle.prbDate) : null" />
+                    <InfoItem label="วันหมดอายุ พ.ร.บ."
+                      :value="detailVehicle.prbExpiry ? fmtDate(detailVehicle.prbExpiry) : null" />
                   </div>
                 </div>
 
@@ -190,9 +255,8 @@
                     <BoolItem label="อาคเนย์" :val="detailVehicle.insAkney" />
                     <BoolItem label="เทเวศ" :val="detailVehicle.insThewet" />
                     <BoolItem label="กรุงเทพประกันภัย" :val="detailVehicle.insBangkokInsurance" />
-                    <InfoItem label="อาคเนย์" :value="detailVehicle.insDate ? fmtDate(detailVehicle.insDate) : null" />
-                    <InfoItem label="เทวด" :value="detailVehicle.insTaxDate ? fmtDate(detailVehicle.insTaxDate) : null" />
-                    <InfoItem label="วันหมด" :value="detailVehicle.insExpiry ? fmtDate(detailVehicle.insExpiry) : null" />
+                    <InfoItem label="วันหมดอายุประกัน"
+                      :value="detailVehicle.insExpiry ? fmtDate(detailVehicle.insExpiry) : null" />
                   </div>
                 </div>
               </div>
@@ -205,21 +269,32 @@
     <!-- Add/Edit Modal -->
     <TransitionRoot :show="showFormModal" as="template">
       <Dialog @close="showFormModal = false" class="relative z-50">
-        <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
+        <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
+          leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
           <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" />
         </TransitionChild>
         <div class="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-full sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100"
-            leave="ease-in duration-200" leave-from="opacity-100 sm:scale-100" leave-to="opacity-0 translate-y-full sm:scale-95">
-            <DialogPanel class="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div class="sticky top-0 bg-white border-b px-5 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl z-10">
-                <DialogTitle class="font-bold text-slate-800">{{ editingVehicle ? 'แก้ไขยานพาหนะ' : 'เพิ่มยานพาหนะใหม่' }}</DialogTitle>
-                <button @click="showFormModal = false" class="p-1 hover:bg-slate-100 rounded-lg"><XMarkIcon class="w-5 h-5 text-slate-400" /></button>
+          <TransitionChild as="template" enter="ease-out duration-300"
+            enter-from="opacity-0 translate-y-full sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100"
+            leave="ease-in duration-200" leave-from="opacity-100 sm:scale-100"
+            leave-to="opacity-0 translate-y-full sm:scale-95">
+            <DialogPanel
+              class="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div
+                class="sticky top-0 bg-white border-b px-5 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl z-10">
+                <DialogTitle class="font-bold text-slate-800">{{ editingVehicle ? 'แก้ไขยานพาหนะ' : 'เพิ่มยานพาหนะใหม่'
+                  }}
+                </DialogTitle>
+                <button @click="showFormModal = false" class="p-1 hover:bg-slate-100 rounded-lg">
+                  <XMarkIcon class="w-5 h-5 text-slate-400" />
+                </button>
               </div>
               <div class="p-5 space-y-5">
                 <!-- ข้อมูลทั่วไป -->
                 <fieldset>
-                  <legend class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-1.5"><TruckIcon class="w-4 h-4 text-blue-500" /> ข้อมูลทั่วไป</legend>
+                  <legend class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-1.5">
+                    <TruckIcon class="w-4 h-4 text-blue-500" /> ข้อมูลทั่วไป
+                  </legend>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FormInput v-model="form.type" label="ประเภทรถ" placeholder="เช่น รถตู้" required />
                     <FormInput v-model="form.licensePlate" label="ทะเบียน" placeholder="เช่น กข 1234" required />
@@ -242,7 +317,9 @@
 
                 <!-- พ.ร.บ. -->
                 <fieldset class="border-t pt-4">
-                  <legend class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-1.5"><DocumentTextIcon class="w-4 h-4 text-amber-500" /> พ.ร.บ.</legend>
+                  <legend class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-1.5">
+                    <DocumentTextIcon class="w-4 h-4 text-amber-500" /> พ.ร.บ.
+                  </legend>
                   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <FormCheck v-model="form.prbLmg" label="LMG" />
                     <FormCheck v-model="form.prbViriya" label="วิริยะ" />
@@ -252,16 +329,16 @@
                     <FormCheck v-model="form.prbBangkokInsurance" label="กรุงเทพประกันภัย" />
                     <FormCheck v-model="form.prbThirdParty" label="ทำประกันภัย" />
                   </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
-                    <FormInput v-model="form.prbTaxDate" label="ต่อภาษี" type="date" />
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                     <FormInput v-model="form.prbExpiry" label="วันหมดอายุ พ.ร.บ." type="date" />
-                    <FormInput v-model="form.prbDate" label="วัน พ.ร.บ." type="date" />
                   </div>
                 </fieldset>
 
                 <!-- รอบต่อประกัน -->
                 <fieldset class="border-t pt-4">
-                  <legend class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-1.5"><ShieldCheckIcon class="w-4 h-4 text-emerald-500" /> รอบต่อประกัน</legend>
+                  <legend class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-1.5">
+                    <ShieldCheckIcon class="w-4 h-4 text-emerald-500" /> รอบต่อประกัน
+                  </legend>
                   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <FormCheck v-model="form.insLmg" label="LMG" />
                     <FormCheck v-model="form.insViriya" label="วิริยะ" />
@@ -271,16 +348,15 @@
                     <FormCheck v-model="form.insThewet" label="เทเวศ" />
                     <FormCheck v-model="form.insBangkokInsurance" label="กรุงเทพประกันภัย" />
                   </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
-                    <FormInput v-model="form.insDate" label="อาคเนย์" type="date" />
-                    <FormInput v-model="form.insTaxDate" label="เทวด" type="date" />
-                    <FormInput v-model="form.insExpiry" label="วันหมด" type="date" />
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                    <FormInput v-model="form.insExpiry" label="วันหมดอายุประกัน" type="date" />
                   </div>
                 </fieldset>
 
                 <!-- Submit -->
                 <div class="border-t pt-4 flex justify-end gap-2">
-                  <button @click="showFormModal = false" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold rounded-xl text-sm transition">ยกเลิก</button>
+                  <button @click="showFormModal = false"
+                    class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold rounded-xl text-sm transition">ยกเลิก</button>
                   <button @click="saveVehicle" :disabled="saving"
                     class="px-6 py-2.5 bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:from-slate-300 disabled:to-slate-300 text-white font-semibold rounded-xl text-sm transition shadow-sm active:scale-[0.98]">
                     {{ saving ? 'กำลังบันทึก...' : (editingVehicle ? 'อัพเดท' : 'เพิ่มยานพาหนะ') }}
@@ -296,7 +372,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, h } from 'vue'
+import { ref, computed, onMounted, watch, h } from 'vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue'
 import {
   TruckIcon, PlusCircleIcon, PencilSquareIcon, TrashIcon, MagnifyingGlassIcon,
@@ -311,7 +387,8 @@ import { auth } from '../stores/auth'
 import { swalSuccess, swalError, swalConfirm } from '../stores/swal'
 
 // --- Inline sub-components ---
-const FormInput = { props: ['modelValue', 'label', 'placeholder', 'type', 'required'],
+const FormInput = {
+  props: ['modelValue', 'label', 'placeholder', 'type', 'required'],
   emits: ['update:modelValue'],
   setup(p, { emit }) {
     return () => h('div', [
@@ -326,17 +403,21 @@ const FormInput = { props: ['modelValue', 'label', 'placeholder', 'type', 'requi
   }
 }
 
-const FormCheck = { props: ['modelValue', 'label'], emits: ['update:modelValue'],
+const FormCheck = {
+  props: ['modelValue', 'label'], emits: ['update:modelValue'],
   setup(p, { emit }) {
     return () => h('label', { class: 'flex items-center gap-2 cursor-pointer select-none' }, [
-      h('input', { type: 'checkbox', checked: p.modelValue, class: 'w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500',
-        onChange: e => emit('update:modelValue', e.target.checked) }),
+      h('input', {
+        type: 'checkbox', checked: p.modelValue, class: 'w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500',
+        onChange: e => emit('update:modelValue', e.target.checked)
+      }),
       h('span', { class: 'text-sm text-slate-700' }, p.label)
     ])
   }
 }
 
-const InfoItem = { props: ['label', 'value'],
+const InfoItem = {
+  props: ['label', 'value'],
   setup(p) {
     return () => h('div', { class: 'bg-slate-50 rounded-lg px-3 py-2' }, [
       h('div', { class: 'text-xs text-slate-400' }, p.label),
@@ -345,7 +426,8 @@ const InfoItem = { props: ['label', 'value'],
   }
 }
 
-const BoolItem = { props: ['label', 'val'],
+const BoolItem = {
+  props: ['label', 'val'],
   setup(p) {
     return () => h('div', { class: 'flex items-center gap-1.5' }, [
       h('span', { class: p.val ? 'text-emerald-500' : 'text-slate-300' }, p.val ? '✓' : '✗'),
@@ -363,6 +445,8 @@ const showFormModal = ref(false)
 const editingVehicle = ref(null)
 const detailVehicle = ref(null)
 const saving = ref(false)
+const currentPage = ref(1)
+const pageSize = 10
 
 const defaultForm = () => ({
   type: '', licensePlate: '', chassisNumber: '', engineNumber: '',
@@ -397,6 +481,14 @@ const filteredVehicles = computed(() => {
   }
   return result
 })
+
+const totalPages = computed(() => Math.ceil(filteredVehicles.value.length / pageSize))
+const paginatedVehicles = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return filteredVehicles.value.slice(start, start + pageSize)
+})
+
+watch(filteredVehicles, () => { currentPage.value = 1 })
 
 function statusLabel(s) {
   return { ACTIVE: 'พร้อมใช้งาน', IN_USE: 'กำลังใช้งาน', MAINTENANCE: 'ซ่อมบำรุง', INACTIVE: 'ปลดระวาง' }[s] || s

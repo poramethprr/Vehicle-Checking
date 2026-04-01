@@ -287,6 +287,103 @@
       </Dialog>
     </TransitionRoot>
 
+    <!-- Detail Modal -->
+    <TransitionRoot :show="!!detailBooking" as="template">
+      <Dialog @close="detailBooking = null" class="relative z-50">
+        <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
+          <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+        </TransitionChild>
+        <div class="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-full sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100"
+            leave="ease-in duration-200" leave-from="opacity-100 sm:scale-100" leave-to="opacity-0 translate-y-full sm:scale-95">
+            <DialogPanel class="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto" v-if="detailBooking">
+              <div class="sticky top-0 bg-white border-b px-5 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl z-10">
+                <DialogTitle class="font-bold text-slate-800 flex items-center gap-2">
+                  <ClockIcon class="w-5 h-5 text-blue-500" /> รายละเอียดการใช้งาน
+                </DialogTitle>
+                <button @click="detailBooking = null" class="p-1 hover:bg-slate-100 rounded-lg"><XMarkIcon class="w-5 h-5 text-slate-400" /></button>
+              </div>
+              <div class="p-5 space-y-4">
+                <!-- Info -->
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                  <div class="bg-slate-50 rounded-xl px-3 py-2.5">
+                    <p class="text-xs text-slate-400 mb-0.5">ยานพาหนะ</p>
+                    <p class="font-semibold text-slate-800">{{ detailBooking.vehicle.licensePlate }}</p>
+                    <p class="text-xs text-slate-400">{{ detailBooking.vehicle.type }}</p>
+                  </div>
+                  <div class="bg-slate-50 rounded-xl px-3 py-2.5">
+                    <p class="text-xs text-slate-400 mb-0.5">สถานะ</p>
+                    <span :class="statusBadge(detailBooking.status)" class="text-xs font-semibold px-2 py-0.5 rounded-full ring-1">{{ statusLabel(detailBooking.status) }}</span>
+                  </div>
+                  <div class="bg-slate-50 rounded-xl px-3 py-2.5">
+                    <p class="text-xs text-slate-400 mb-0.5">ผู้ขับขี่</p>
+                    <p class="font-semibold text-slate-800">{{ detailBooking.driver.username }}</p>
+                  </div>
+                  <div class="bg-slate-50 rounded-xl px-3 py-2.5">
+                    <p class="text-xs text-slate-400 mb-0.5">ปลายทาง</p>
+                    <p class="font-semibold text-slate-800">{{ detailBooking.destination }}</p>
+                  </div>
+                </div>
+
+                <!-- Mileage -->
+                <div class="bg-blue-50 rounded-xl p-4 grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p class="text-[10px] text-blue-400 uppercase font-semibold mb-1">ไมล์ออก</p>
+                    <p class="font-bold text-blue-700 text-lg">{{ num(detailBooking.mileageOut) }}</p>
+                    <p class="text-[10px] text-blue-400">กม.</p>
+                  </div>
+                  <div>
+                    <p class="text-[10px] text-emerald-400 uppercase font-semibold mb-1">ไมล์เข้า</p>
+                    <p class="font-bold text-emerald-700 text-lg">{{ detailBooking.mileageIn ? num(detailBooking.mileageIn) : '-' }}</p>
+                    <p class="text-[10px] text-emerald-400">กม.</p>
+                  </div>
+                  <div>
+                    <p class="text-[10px] text-slate-400 uppercase font-semibold mb-1">ระยะทาง</p>
+                    <p class="font-bold text-slate-800 text-lg">{{ detailBooking.distance ? num(detailBooking.distance) : '-' }}</p>
+                    <p class="text-[10px] text-slate-400">กม.</p>
+                  </div>
+                </div>
+
+                <!-- Photos -->
+                <div v-if="photoUrl(detailBooking.mileageOutPhoto) || photoUrl(detailBooking.mileageInPhoto)">
+                  <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">รูปถ่ายเลขไมล์</p>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div v-if="photoUrl(detailBooking.mileageOutPhoto)">
+                      <p class="text-xs text-slate-400 mb-1 text-center">ไมล์ขาออก</p>
+                      <img :src="photoUrl(detailBooking.mileageOutPhoto)" @click="lightboxPhoto = photoUrl(detailBooking.mileageOutPhoto)"
+                        class="w-full h-32 object-cover rounded-xl cursor-zoom-in hover:opacity-90 transition" />
+                    </div>
+                    <div v-if="photoUrl(detailBooking.mileageInPhoto)">
+                      <p class="text-xs text-slate-400 mb-1 text-center">ไมล์ขาเข้า</p>
+                      <img :src="photoUrl(detailBooking.mileageInPhoto)" @click="lightboxPhoto = photoUrl(detailBooking.mileageInPhoto)"
+                        class="w-full h-32 object-cover rounded-xl cursor-zoom-in hover:opacity-90 transition" />
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="detailBooking.returnNote" class="bg-amber-50 border border-amber-100 rounded-xl p-3 text-sm text-amber-800">
+                  <span class="font-semibold">หมายเหตุ:</span> {{ detailBooking.returnNote }}
+                </div>
+              </div>
+            </DialogPanel>
+          </TransitionChild>
+        </div>
+      </Dialog>
+    </TransitionRoot>
+
+    <!-- Lightbox -->
+    <Teleport to="body">
+      <Transition enter-active-class="transition duration-200" enter-from-class="opacity-0" enter-to-class="opacity-100"
+        leave-active-class="transition duration-150" leave-from-class="opacity-100" leave-to-class="opacity-0">
+        <div v-if="lightboxPhoto" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90" @click="lightboxPhoto = null">
+          <img :src="lightboxPhoto" class="max-w-[92vw] max-h-[88vh] rounded-2xl shadow-2xl object-contain" @click.stop />
+          <button @click="lightboxPhoto = null" class="absolute top-4 right-4 w-9 h-9 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition">
+            <XMarkIcon class="w-5 h-5 text-white" />
+          </button>
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- Return Modal -->
     <TransitionRoot :show="showReturn" as="template">
       <Dialog @close="showReturn = false" class="relative z-50">
@@ -369,6 +466,13 @@ const showReturn = ref(false)
 const returnBooking = ref(null)
 const savingCO = ref(false)
 const savingRT = ref(false)
+const lightboxPhoto = ref(null)
+
+function photoUrl(filename) {
+  if (!filename) return null
+  if (filename.startsWith('http')) return filename
+  return api.defaults.baseURL.replace('/api', '') + '/uploads/' + filename
+}
 
 const coForm = ref({ vehicleId: '', requesterId: '', driverId: '', destination: '', purpose: '', mileageOut: '', photo: null })
 const rtForm = ref({ mileageIn: '', photo: null, note: '' })
@@ -470,33 +574,8 @@ function openReturn(b) {
   showReturn.value = true
 }
 
-function viewDetail(b) {
-  const html = `
-    <div class="text-left space-y-3">
-      <div class="grid grid-cols-2 gap-4 border-b pb-3">
-        <div><p class="text-xs text-slate-400">ยานพาหนะ</p><p class="font-semibold">${b.vehicle.licensePlate}</p></div>
-        <div><p class="text-xs text-slate-400">ประเภท</p><p class="font-semibold">${b.vehicle.type}</p></div>
-      </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div><p class="text-xs text-slate-400">ผู้ขับขี่</p><p class="font-semibold">${b.driver.username}</p></div>
-        <div><p class="text-xs text-slate-400">ปลายทาง</p><p class="font-semibold">${b.destination}</p></div>
-      </div>
-      <div class="bg-slate-50 p-3 rounded-xl grid grid-cols-3 gap-2 text-center">
-        <div><p class="text-[10px] text-slate-400 uppercase">ไมล์ออก</p><p class="font-bold text-blue-600">${num(b.mileageOut)}</p></div>
-        <div><p class="text-[10px] text-slate-400 uppercase">ไมล์เข้า</p><p class="font-bold text-emerald-600">${b.mileageIn ? num(b.mileageIn) : '-'}</p></div>
-        <div><p class="text-[10px] text-slate-400 uppercase">รวมระยะทาง</p><p class="font-bold text-slate-800">${b.distance ? num(b.distance) + ' กม.' : '-'}</p></div>
-      </div>
-      ${b.returnNote ? `<div class="bg-amber-50 p-2 rounded-lg text-xs text-amber-700"><strong>หมายเหตุ:</strong> ${b.returnNote}</div>` : ''}
-    </div>
-  `
-  import('../stores/swal').then(m => m.default.fire({
-    title: 'รายละเอียดการใช้งาน',
-    html,
-    width: '400px',
-    confirmButtonText: 'ปิด',
-    confirmButtonColor: '#3b82f6'
-  }))
-}
+const detailBooking = ref(null)
+function viewDetail(b) { detailBooking.value = b }
 
 async function doCheckout() {
   const vid = selectedVehicle.value ? selectedVehicle.value.id : coForm.value.vehicleId

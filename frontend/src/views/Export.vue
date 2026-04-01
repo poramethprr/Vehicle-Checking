@@ -36,29 +36,39 @@
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" v-if="vehicleId">
-          <button @click="exportExcel"
-            class="group flex items-center gap-4 bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-200 hover:border-emerald-300 rounded-2xl p-5 transition-all active:scale-[0.98]">
-            <div class="w-14 h-14 bg-linear-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-200 group-hover:shadow-xl transition-shadow">
-              <TableCellsIcon class="w-7 h-7 text-white" />
+          <button @click="exportExcel" :disabled="loadingExcel || loadingPdf"
+            class="group flex items-center gap-4 bg-emerald-50 hover:bg-emerald-100 disabled:opacity-60 disabled:cursor-not-allowed border-2 border-emerald-200 hover:border-emerald-300 rounded-2xl p-5 transition-all active:scale-[0.98]">
+            <div class="w-14 h-14 bg-linear-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-200 group-hover:shadow-xl transition-shadow shrink-0">
+              <svg v-if="loadingExcel" class="animate-spin w-7 h-7 text-white" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+              <TableCellsIcon v-else class="w-7 h-7 text-white" />
             </div>
             <div class="text-left">
               <div class="font-bold text-emerald-800 flex items-center gap-1.5">
-                <ArrowDownTrayIcon class="w-4 h-4" /> Export Excel
+                <ArrowDownTrayIcon class="w-4 h-4" />
+                {{ loadingExcel ? 'กำลัง Export...' : 'Export Excel' }}
               </div>
-              <div class="text-xs text-emerald-600 mt-0.5">ไฟล์ .xlsx สำหรับเปิดใน Excel</div>
+              <div class="text-xs text-emerald-600 mt-0.5">{{ loadingExcel ? 'กรุณารอสักครู่' : 'ไฟล์ .xlsx สำหรับเปิดใน Excel' }}</div>
             </div>
           </button>
 
-          <button @click="exportPdf"
-            class="group flex items-center gap-4 bg-red-50 hover:bg-red-100 border-2 border-red-200 hover:border-red-300 rounded-2xl p-5 transition-all active:scale-[0.98]">
-            <div class="w-14 h-14 bg-linear-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-200 group-hover:shadow-xl transition-shadow">
-              <DocumentTextIcon class="w-7 h-7 text-white" />
+          <button @click="exportPdf" :disabled="loadingExcel || loadingPdf"
+            class="group flex items-center gap-4 bg-red-50 hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed border-2 border-red-200 hover:border-red-300 rounded-2xl p-5 transition-all active:scale-[0.98]">
+            <div class="w-14 h-14 bg-linear-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-200 group-hover:shadow-xl transition-shadow shrink-0">
+              <svg v-if="loadingPdf" class="animate-spin w-7 h-7 text-white" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+              <DocumentTextIcon v-else class="w-7 h-7 text-white" />
             </div>
             <div class="text-left">
               <div class="font-bold text-red-800 flex items-center gap-1.5">
-                <ArrowDownTrayIcon class="w-4 h-4" /> Export PDF
+                <ArrowDownTrayIcon class="w-4 h-4" />
+                {{ loadingPdf ? 'กำลัง Export...' : 'Export PDF' }}
               </div>
-              <div class="text-xs text-red-600 mt-0.5">ไฟล์ .pdf สำหรับพิมพ์เอกสาร</div>
+              <div class="text-xs text-red-600 mt-0.5">{{ loadingPdf ? 'กรุณารอสักครู่' : 'ไฟล์ .pdf สำหรับพิมพ์เอกสาร' }}</div>
             </div>
           </button>
         </div>
@@ -83,6 +93,8 @@ const month = ref(now.getMonth() + 1)
 const year = ref(now.getFullYear())
 const vehicleId = ref('')
 const vehicles = ref([])
+const loadingExcel = ref(false)
+const loadingPdf = ref(false)
 
 const monthOptions = thaiMonths.map((m, i) => ({ value: i + 1, label: m }))
 const yearOptionsList = Array.from({ length: 5 }, (_, i) => ({ value: now.getFullYear() - i, label: String(now.getFullYear() - i) }))
@@ -90,6 +102,8 @@ const vehicleOptions = computed(() => vehicles.value.map(v => ({ value: v.id, la
 
 async function doExport(type) {
   const url = `${api.defaults.baseURL}/export/${type}?vehicleId=${vehicleId.value}&month=${month.value}&year=${year.value}`
+  if (type === 'excel') loadingExcel.value = true
+  else loadingPdf.value = true
   try {
     const res = await fetch(url)
     if (!res.ok) {
@@ -107,6 +121,9 @@ async function doExport(type) {
     swalSuccess('Export สำเร็จ', `ดาวน์โหลดไฟล์ ${ext.toUpperCase()} เรียบร้อยแล้ว`)
   } catch (err) {
     swalError('เชื่อมต่อไม่ได้', 'กรุณาตรวจสอบว่า Backend กำลังทำงานอยู่')
+  } finally {
+    loadingExcel.value = false
+    loadingPdf.value = false
   }
 }
 

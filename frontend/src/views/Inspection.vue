@@ -141,26 +141,55 @@
         </table>
       </div>
 
-      <!-- Save button -->
-      <div class="px-5 sm:px-6 py-4 bg-slate-50/50 border-t border-gray-100">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <!-- Desktop save bar -->
+      <div class="hidden sm:block px-6 py-4 bg-slate-50/50 border-t border-gray-100">
+        <div class="flex items-center justify-between gap-3">
           <div class="text-xs text-slate-400">
             ปกติ <span class="font-bold text-emerald-500">{{ normalCount }}</span> · ผิดปกติ <span class="font-bold text-red-500">{{ abnormalCount }}</span> รายการ
           </div>
           <button @click="saveInspection" :disabled="saving"
-            class="w-full sm:w-auto bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:from-slate-300 disabled:to-slate-300 text-white font-semibold px-8 py-3 rounded-xl transition-all text-sm shadow-lg shadow-emerald-200/50 hover:shadow-xl active:scale-[0.98] flex items-center justify-center gap-2">
+            class="bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:from-slate-300 disabled:to-slate-300 text-white font-semibold px-8 py-3 rounded-xl transition-all text-sm shadow-lg shadow-emerald-200/50 hover:shadow-xl active:scale-[0.98] flex items-center gap-2">
             <span v-if="saving" class="flex items-center gap-2">
               <svg class="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
               กำลังบันทึก...
             </span>
             <span v-else class="flex items-center gap-1.5">
-              <CheckCircleIcon class="w-4.5 h-4.5" />
+              <CheckCircleIcon class="w-4 h-4" />
               {{ editingId ? 'อัพเดทการตรวจเช็ค' : 'บันทึกการตรวจเช็ค' }}
             </span>
           </button>
         </div>
       </div>
     </div>
+
+    <!-- Mobile sticky save bar -->
+    <Teleport to="body">
+      <div v-if="selectedVehicleId && inspectionDate" class="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 px-4 py-3 shadow-xl">
+        <div class="flex items-center gap-3">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-linear-to-r from-emerald-400 to-emerald-500 transition-all duration-500" :style="{ width: progressPercent + '%' }"></div>
+              </div>
+              <span class="text-xs font-semibold text-slate-500 shrink-0">{{ normalCount + abnormalCount }}/{{ checklistItems.length }}</span>
+            </div>
+            <div class="text-xs text-slate-400">
+              <span class="text-emerald-600 font-semibold">{{ normalCount }} ปกติ</span>
+              <template v-if="abnormalCount"> · <span class="text-red-500 font-semibold">{{ abnormalCount }} ผิดปกติ</span></template>
+            </div>
+          </div>
+          <button @click="saveInspection" :disabled="saving"
+            class="shrink-0 bg-linear-to-r from-emerald-500 to-teal-600 disabled:from-slate-300 disabled:to-slate-300 text-white font-bold px-5 py-3 rounded-xl text-sm transition active:scale-[0.97] shadow-lg shadow-emerald-200 flex items-center gap-2">
+            <svg v-if="saving" class="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+            <CheckCircleIcon v-else class="w-4 h-4" />
+            {{ saving ? 'บันทึก...' : (editingId ? 'อัพเดท' : 'บันทึก') }}
+          </button>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Spacer for mobile sticky bar -->
+    <div v-if="selectedVehicleId && inspectionDate" class="sm:hidden h-20"></div>
   </div>
 </template>
 
