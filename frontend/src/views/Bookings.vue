@@ -1,32 +1,40 @@
 <template>
   <div>
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
-      <div>
-        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">เบิก/คืนรถ</h1>
-        <p class="text-sm text-slate-400 mt-0.5">ระบบเบิกและคืนยานพาหนะ พร้อมบันทึกเลขไมล์</p>
+    <div class="relative bg-linear-to-r from-emerald-500 to-teal-600 rounded-2xl px-6 py-5 mb-5 overflow-hidden shadow-md shadow-emerald-200">
+      <div class="absolute -top-6 -right-6 w-28 h-28 bg-white/10 rounded-full pointer-events-none"></div>
+      <div class="relative flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+            <ArrowsRightLeftIcon class="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 class="text-lg sm:text-xl font-bold text-white">เบิก/คืนรถ</h1>
+            <p class="text-emerald-100 text-xs mt-0.5">ระบบเบิกและคืนยานพาหนะ พร้อมบันทึกเลขไมล์</p>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Stats -->
     <div class="grid grid-cols-3 gap-3 mb-5">
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
-        <div class="text-2xl font-bold text-emerald-600">{{ stats.available }}</div>
-        <div class="text-xs text-slate-400 mt-1">รถพร้อมใช้งาน</div>
+      <div class="bg-linear-to-br from-emerald-500 to-teal-600 rounded-xl shadow-sm shadow-emerald-200 p-4 text-center">
+        <div class="text-2xl font-bold text-white">{{ stats.available }}</div>
+        <div class="text-xs text-emerald-100 mt-1">รถพร้อมใช้งาน</div>
       </div>
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
-        <div class="text-2xl font-bold text-amber-600">{{ stats.checkedOut }}</div>
-        <div class="text-xs text-slate-400 mt-1">กำลังใช้งาน</div>
+      <div class="bg-linear-to-br from-amber-400 to-orange-500 rounded-xl shadow-sm shadow-amber-200 p-4 text-center">
+        <div class="text-2xl font-bold text-white">{{ stats.checkedOut }}</div>
+        <div class="text-xs text-amber-100 mt-1">กำลังใช้งาน</div>
       </div>
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
-        <div class="text-2xl font-bold text-blue-600">{{ stats.returned }}</div>
-        <div class="text-xs text-slate-400 mt-1">คืนแล้ววันนี้</div>
+      <div class="bg-linear-to-br from-blue-500 to-indigo-600 rounded-xl shadow-sm shadow-blue-200 p-4 text-center">
+        <div class="text-2xl font-bold text-white">{{ stats.returned }}</div>
+        <div class="text-xs text-blue-100 mt-1">คืนแล้ววันนี้</div>
       </div>
     </div>
 
     <!-- Tabs -->
     <TabGroup :selected-index="selectedTab" @change="selectedTab = $event">
-      <TabList class="flex gap-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-1.5 mb-4">
+      <TabList class="flex gap-1 bg-white rounded-2xl shadow-xl shadow-slate-500/25 border border-gray-200 p-1.5 mb-4">
         <Tab v-slot="{ selected }" as="template">
           <button :class="[selected ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50', 'flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all']">
             <CheckCircleIcon class="w-4 h-4" />
@@ -58,7 +66,7 @@
           <div class="relative mb-4">
             <MagnifyingGlassIcon class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input v-model="searchAvailable" placeholder="ค้นหาทะเบียน, ประเภท, เลขตัวถัง..."
-              class="w-full pl-9 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:bg-white outline-none text-sm transition" />
+              class="w-full pl-9 pr-9 py-2.5 bg-white border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-sm transition hover:border-emerald-400" />
             <button v-if="searchAvailable" @click="searchAvailable = ''" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
               <XCircleIcon class="w-4 h-4" />
             </button>
@@ -66,7 +74,7 @@
 
           <div v-if="filteredAvailable.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div v-for="v in filteredAvailable" :key="v.id"
-              class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-emerald-200 transition-all">
+              class="bg-white rounded-2xl shadow-xl shadow-slate-500/25 border border-gray-200 p-4 hover:shadow-md hover:border-emerald-200 transition-all">
               <div class="flex items-start justify-between mb-3">
                 <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
                   <TruckIcon class="w-5 h-5 text-emerald-500" />
@@ -87,7 +95,7 @@
               </button>
             </div>
           </div>
-          <div v-else class="bg-white rounded-2xl shadow-sm border border-gray-100 py-16 flex flex-col items-center gap-2 text-slate-400">
+          <div v-else class="bg-white rounded-2xl shadow-xl shadow-slate-500/25 border border-gray-200 py-16 flex flex-col items-center gap-2 text-slate-400">
             <TruckIcon class="w-10 h-10 opacity-30" />
             <p class="text-sm font-medium">{{ searchAvailable ? 'ไม่พบรถที่ค้นหา' : 'ไม่มีรถที่พร้อมใช้งาน' }}</p>
             <p v-if="!searchAvailable" class="text-xs">รถทั้งหมดอาจกำลังใช้งานหรืออยู่ระหว่างซ่อมบำรุง</p>
@@ -100,14 +108,14 @@
           <div class="relative mb-4">
             <MagnifyingGlassIcon class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input v-model="searchActive" placeholder="ค้นหาทะเบียน, คนขับ, สถานที่..."
-              class="w-full pl-9 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent focus:bg-white outline-none text-sm transition" />
+              class="w-full pl-9 pr-9 py-2.5 bg-white border border-slate-300 rounded-xl shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none text-sm transition hover:border-amber-400" />
             <button v-if="searchActive" @click="searchActive = ''" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
               <XCircleIcon class="w-4 h-4" />
             </button>
           </div>
 
-          <div v-if="filteredActive.length" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="divide-y divide-gray-50">
+          <div v-if="filteredActive.length" class="bg-white rounded-2xl shadow-xl shadow-slate-500/25 border border-gray-200 overflow-hidden">
+            <div class="divide-y divide-gray-100">
               <div v-for="b in filteredActive" :key="b.id" class="px-5 py-4">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div class="flex items-start gap-3">
@@ -137,7 +145,7 @@
               </div>
             </div>
           </div>
-          <div v-else class="bg-white rounded-2xl shadow-sm border border-gray-100 py-16 flex flex-col items-center gap-2 text-slate-400">
+          <div v-else class="bg-white rounded-2xl shadow-xl shadow-slate-500/25 border border-gray-200 py-16 flex flex-col items-center gap-2 text-slate-400">
             <CheckCircleIcon class="w-10 h-10 opacity-30" />
             <p class="text-sm font-medium">{{ searchActive ? 'ไม่พบรถที่ค้นหา' : 'ไม่มีรถที่กำลังใช้งาน' }}</p>
           </div>
@@ -145,20 +153,20 @@
 
         <!-- Tab 3: ประวัติ -->
         <TabPanel>
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div class="bg-white rounded-2xl shadow-xl shadow-slate-500/25 border border-gray-200 overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <h3 class="font-bold text-slate-800 flex items-center gap-2">
                 <ClockIcon class="w-5 h-5 text-blue-500" /> ประวัติการเบิก/คืน
               </h3>
               <div class="relative w-full sm:w-56">
                 <MagnifyingGlassIcon class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input v-model="searchText" placeholder="ค้นหาทะเบียน, คนขับ, สถานที่..."
-                  class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white outline-none text-sm transition" />
+                  class="w-full pl-9 pr-4 py-2 bg-white border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm transition hover:border-blue-400" />
               </div>
             </div>
 
             <!-- Mobile -->
-            <div class="sm:hidden divide-y divide-gray-50" v-if="filteredHistory.length">
+            <div class="sm:hidden divide-y divide-gray-100" v-if="filteredHistory.length">
               <div v-for="b in filteredHistory" :key="b.id" class="px-4 py-3.5">
                 <div class="flex justify-between items-start mb-1">
                   <span class="font-semibold text-sm text-slate-800">{{ b.vehicle.licensePlate }}</span>
@@ -188,7 +196,7 @@
                   <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 uppercase">สถานะ</th>
                   <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 uppercase"></th>
                 </tr></thead>
-                <tbody class="divide-y divide-gray-50">
+                <tbody class="divide-y divide-gray-100">
                   <tr v-for="b in filteredHistory" :key="b.id" class="hover:bg-slate-50/50 transition">
                     <td class="py-3 px-4 text-sm text-slate-500 whitespace-nowrap">{{ fmtDateTime(b.checkoutDate) }}</td>
                     <td class="py-3 px-4 text-sm font-semibold text-slate-700">{{ b.vehicle.licensePlate }}</td>
@@ -250,12 +258,12 @@
                 <div>
                   <label class="block text-xs font-semibold text-slate-500 mb-1">สถานที่ปลายทาง <span class="text-red-500">*</span></label>
                   <input v-model="coForm.destination" placeholder="เช่น โรงพยาบาลศิริราช"
-                    class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
+                    class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm shadow-sm focus:ring-2 focus:ring-emerald-500 outline-none hover:border-emerald-400" />
                 </div>
                 <div>
                   <label class="block text-xs font-semibold text-slate-500 mb-1">วัตถุประสงค์</label>
                   <input v-model="coForm.purpose" placeholder="เช่น ส่งผู้ป่วย, ประชุม"
-                    class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
+                    class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm shadow-sm focus:ring-2 focus:ring-emerald-500 outline-none hover:border-emerald-400" />
                 </div>
                 <div>
                   <label class="block text-xs font-semibold text-slate-500 mb-1">คนทำเรื่องเบิก <span class="text-red-500">*</span></label>
@@ -268,7 +276,7 @@
                 <div>
                   <label class="block text-xs font-semibold text-slate-500 mb-1">เลขไมล์ตอนออก <span class="text-red-500">*</span></label>
                   <input v-model="coForm.mileageOut" type="number" placeholder="เลขไมล์"
-                    class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
+                    class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm shadow-sm focus:ring-2 focus:ring-emerald-500 outline-none hover:border-emerald-400" />
                 </div>
                 <div>
                   <label class="block text-xs font-semibold text-slate-500 mb-1">รูปเลขไมล์ (ตอนออก)</label>
@@ -410,7 +418,7 @@
                 <div>
                   <label class="block text-xs font-semibold text-slate-500 mb-1">เลขไมล์ตอนกลับ <span class="text-red-500">*</span></label>
                   <input v-model="rtForm.mileageIn" type="number" placeholder="เลขไมล์"
-                    class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                    class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm shadow-sm focus:ring-2 focus:ring-blue-500 outline-none hover:border-blue-400" />
                   <div v-if="rtForm.mileageIn && returnBooking" class="text-xs text-blue-600 mt-1 font-medium">
                     ระยะทาง: {{ num(Number(rtForm.mileageIn) - returnBooking.mileageOut) }} กม.
                   </div>
@@ -423,7 +431,7 @@
                 <div>
                   <label class="block text-xs font-semibold text-slate-500 mb-1">หมายเหตุ</label>
                   <textarea v-model="rtForm.note" rows="2" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)"
-                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                    class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm shadow-sm focus:ring-2 focus:ring-blue-500 outline-none hover:border-blue-400"></textarea>
                 </div>
                 <button @click="doReturn" :disabled="savingRT"
                   class="w-full bg-linear-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-slate-300 disabled:to-slate-300 text-white font-semibold py-3 rounded-xl text-sm transition shadow-sm active:scale-[0.98] flex items-center justify-center gap-2">
@@ -443,7 +451,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { TabGroup, TabList, Tab, TabPanels, TabPanel, Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue'
 import {
-  TruckIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, ClockIcon, MagnifyingGlassIcon,
+  TruckIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, ClockIcon, MagnifyingGlassIcon, ArrowsRightLeftIcon,
   XMarkIcon, XCircleIcon, EyeIcon, MapPinIcon, CheckCircleIcon, UserIcon
 } from '@heroicons/vue/24/outline'
 import AppSelect from '../components/AppSelect.vue'

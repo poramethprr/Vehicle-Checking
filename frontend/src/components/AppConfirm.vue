@@ -18,7 +18,7 @@
               <DialogTitle class="text-lg font-bold text-slate-800 mb-1">{{ title }}</DialogTitle>
               <p class="text-sm text-slate-500">{{ message }}</p>
             </div>
-            <div class="flex border-t border-gray-100">
+            <div class="flex border-t border-gray-200">
               <button @click="$emit('cancel')"
                 class="flex-1 py-3.5 text-sm font-semibold text-slate-500 hover:bg-slate-50 transition">
                 ยกเลิก

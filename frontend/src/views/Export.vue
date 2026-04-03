@@ -1,12 +1,20 @@
 <template>
   <div>
-    <div class="mb-6">
-      <h1 class="text-xl sm:text-2xl font-bold text-slate-800">Export ข้อมูล</h1>
-      <p class="text-sm text-slate-400 mt-0.5">ส่งออกข้อมูลการตรวจเช็คเป็น Excel หรือ PDF</p>
+    <div class="relative bg-linear-to-r from-rose-500 to-pink-600 rounded-2xl px-6 py-5 mb-6 overflow-hidden shadow-md shadow-rose-200">
+      <div class="absolute -top-6 -right-6 w-28 h-28 bg-white/10 rounded-full pointer-events-none"></div>
+      <div class="relative flex items-center gap-3">
+        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+          <ArrowDownTrayIcon class="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold text-white">Export ข้อมูล</h1>
+          <p class="text-rose-200 text-xs mt-0.5">ส่งออกข้อมูลการตรวจเช็คเป็น Excel หรือ PDF</p>
+        </div>
+      </div>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-      <div class="px-5 sm:px-6 py-4 border-b border-gray-100">
+    <div class="bg-linear-to-br from-white to-rose-50/30 rounded-2xl shadow-lg shadow-rose-200/40 border border-rose-200 overflow-hidden">
+      <div class="px-5 sm:px-6 py-4 border-b border-rose-100/60">
         <h3 class="font-bold text-slate-800 flex items-center gap-2">
           <ArrowDownTrayIcon class="w-5 h-5 text-blue-500" />
           เลือกข้อมูลสำหรับ Export

@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12 relative overflow-hidden">
-    <!-- Background Decorative Elements -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
       <div class="absolute -top-24 -left-24 w-96 h-96 bg-emerald-100 rounded-full blur-3xl opacity-50"></div>
       <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50"></div>
@@ -8,12 +7,10 @@
 
     <div class="relative bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/60 w-full max-w-md border border-slate-100">
       <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-slate-100 rounded-b-full"></div>
-      
+
       <div class="p-8 sm:p-10">
         <div class="flex justify-center mb-6">
-          <div class="w-16 h-16 bg-linear-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-200">
-            <LockClosedIcon class="w-8 h-8 text-white" />
-          </div>
+          <img src="../assets/logo-icon.png" alt="logo" class="w-20 h-20 rounded-full shadow-lg shadow-emerald-200 object-cover" />
         </div>
 
         <h2 class="text-center text-2xl font-bold text-slate-800 mb-1">ยินดีต้อนรับกลับมา</h2>
@@ -28,11 +25,25 @@
 
         <form @submit.prevent="login" class="space-y-5">
           <div class="space-y-1.5">
-            <label class="block text-sm font-semibold text-slate-600 mb-1.5">เบอร์โทรศัพท์</label>
+            <label class="block text-sm font-semibold text-slate-600 mb-1.5">ชื่อผู้ใช้</label>
             <div class="relative">
-              <PhoneIcon class="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input v-model="phone" type="tel" placeholder="0xx-xxx-xxxx" required autofocus
-                class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white outline-none transition-all text-sm sm:text-base" />
+              <UserIcon class="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input v-model="username" type="text" placeholder="กรอกชื่อผู้ใช้" required autofocus
+                class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-300 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white outline-none transition-all text-sm sm:text-base" />
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="block text-sm font-semibold text-slate-600 mb-1.5">รหัสผ่าน</label>
+            <div class="relative">
+              <LockClosedIcon class="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="กรอกรหัสผ่าน" required
+                class="w-full pl-11 pr-11 py-3.5 bg-slate-50 border border-slate-300 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white outline-none transition-all text-sm sm:text-base" />
+              <button type="button" @click="showPassword = !showPassword"
+                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition">
+                <EyeSlashIcon v-if="showPassword" class="w-5 h-5" />
+                <EyeIcon v-else class="w-5 h-5" />
+              </button>
             </div>
           </div>
 
@@ -65,11 +76,13 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { PhoneIcon, ExclamationCircleIcon, LockClosedIcon } from '@heroicons/vue/24/outline'
+import { UserIcon, LockClosedIcon, ExclamationCircleIcon, EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 import api from '../stores/api'
 import { auth } from '../stores/auth'
 
-const phone = ref('')
+const username = ref('')
+const password = ref('')
+const showPassword = ref(false)
 const error = ref('')
 const loading = ref(false)
 const router = useRouter()
@@ -78,16 +91,17 @@ async function login() {
   error.value = ''
   loading.value = true
   try {
-    const res = await api.post('/auth/login', { phone: phone.value.trim() })
+    const res = await api.post('/auth/login', {
+      username: username.value.trim(),
+      password: password.value
+    })
     auth.login(res.data.token, res.data.user)
     router.push('/')
   } catch (err) {
     if (!err.response) {
-      // กรณีเชื่อมต่อเซิร์ฟเวอร์ไม่ได้เลย (เช่น เซิร์ฟเวอร์ล่ม หรือเน็ตหลุด)
       error.value = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง'
     } else {
-      // กรณีเซิร์ฟเวอร์ตอบกลับมาพร้อมข้อความ Error (เช่น ไม่พบเบอร์โทร)
-      error.value = err.response?.data?.error || 'เบอร์โทรศัพท์หรือข้อมูลไม่ถูกต้อง'
+      error.value = err.response?.data?.error || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'
     }
   } finally {
     loading.value = false

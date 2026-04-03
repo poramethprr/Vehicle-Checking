@@ -1,5 +1,6 @@
 const express = require('express')
 const router = express.Router()
+const bcrypt = require('bcryptjs')
 const prisma = require('../services/prisma')
 const { logActivity } = require('../services/logger')
 
@@ -17,9 +18,11 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'เบอร์โทรนี้ถูกใช้งานแล้ว' })
     }
 
-    const user = await prisma.user.create({
-      data: { username: username.trim(), phone: phoneTrimmed, role }
-    })
+    const data = { username: username.trim(), phone: phoneTrimmed, role }
+    if (req.body.password) {
+      data.password = await bcrypt.hash(req.body.password, 10)
+    }
+    const user = await prisma.user.create({ data })
 
     if (actionUserId) {
       await logActivity(actionUserId, 'CREATE_USER', `เพิ่มผู้ใช้ ${username} บทบาท ${role}`, 'User', user.id)
@@ -55,10 +58,14 @@ router.get('/:id', async (req, res) => {
 // Update user
 router.put('/:id', async (req, res) => {
   try {
-    const { username, phone, role, actionUserId } = req.body
+    const { username, phone, role, password, actionUserId } = req.body
+    const data = { username, phone, role }
+    if (password) {
+      data.password = await bcrypt.hash(password, 10)
+    }
     const user = await prisma.user.update({
       where: { id: Number(req.params.id) },
-      data: { username, phone, role }
+      data
     })
 
     if (actionUserId) {

@@ -16,12 +16,14 @@
     "@heroicons/vue": "^2.2.0",
     "@tailwindcss/vite": "^4.2.2",
     "axios": "^1.14.0",
+    "qrcode": "^1.5.4",
     "sweetalert2": "^11.26.24",
     "tailwindcss": "^4.2.2",
     "vue": "^3.5.30",
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@types/qrcode": "^1.5.6",
     "@vitejs/plugin-vue": "^6.0.5",
     "typescript": "^6.0.2",
     "vite": "^8.0.1",

@@ -1,14 +1,21 @@
 <template>
   <div>
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
-      <div>
-        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">จัดการยานพาหนะ</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Vehicle Management — ข้อมูลยานพาหนะ, พ.ร.บ., ประกัน</p>
-      </div>
-      <div class="flex gap-2 self-start">
+    <div class="relative bg-linear-to-r from-blue-600 to-cyan-600 rounded-2xl px-6 py-5 mb-6 overflow-hidden shadow-md shadow-blue-200">
+      <div class="absolute -top-6 -right-6 w-28 h-28 bg-white/10 rounded-full pointer-events-none"></div>
+      <div class="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+            <TruckIcon class="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 class="text-lg sm:text-xl font-bold text-white">จัดการยานพาหนะ</h1>
+            <p class="text-blue-200 text-xs mt-0.5">ข้อมูลยานพาหนะ, พ.ร.บ., ประกัน</p>
+          </div>
+        </div>
+        <div class="flex gap-2 self-start sm:self-auto">
         <button @click="openForm(null)"
-          class="bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold px-4 py-2.5 rounded-xl transition-all text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-1.5">
-          <PlusCircleIcon class="w-4 h-4" /> เพิ่ม
+          class="bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold px-5 py-2.5 rounded-xl transition-all text-sm shadow-lg shadow-emerald-300 hover:shadow-xl hover:shadow-emerald-300 hover:-translate-y-0.5 active:scale-[0.97] flex items-center gap-2 ring-2 ring-emerald-400/40">
+          <PlusCircleIcon class="w-4.5 h-4.5" /> เพิ่มยานพาหนะ
         </button>
         <button @click="exportVehicles"
           class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2.5 rounded-xl transition-all text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-1.5">
@@ -19,17 +26,22 @@
           <ArrowUpTrayIcon class="w-4 h-4" /> Import
           <input type="file" accept=".xlsx,.xls" @change="importVehicles" class="hidden" />
         </label>
+        <button @click="printAllQR"
+          class="bg-violet-500 hover:bg-violet-600 text-white font-semibold px-4 py-2.5 rounded-xl transition-all text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-1.5">
+          <QrCodeIcon class="w-4 h-4" /> QR ทั้งหมด
+        </button>
+        </div>
       </div>
     </div>
 
     <!-- Search & Filter -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 mb-5 overflow-visible">
+    <div class="bg-linear-to-br from-white to-blue-50/40 rounded-2xl shadow-lg shadow-blue-200/40 border border-blue-200 p-4 sm:p-5 mb-5 overflow-visible">
       <div class="flex flex-col sm:flex-row gap-3">
         <div class="relative flex-1">
           <MagnifyingGlassIcon
             class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input v-model="searchQuery" placeholder="ค้นหาทะเบียน, ประเภท, เลขตัวถัง, เลขเครื่อง..."
-            class="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white outline-none text-sm transition" />
+            class="w-full pl-9 pr-8 py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm shadow-sm transition hover:border-blue-400" />
           <button v-if="searchQuery" @click="searchQuery = ''"
             class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
             <XCircleIcon class="w-4 h-4" />
@@ -47,8 +59,8 @@
     </div>
 
     <!-- Vehicle List -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-visible">
-      <div class="px-5 sm:px-6 py-4 border-b border-gray-100">
+    <div class="bg-white rounded-2xl shadow-xl shadow-slate-500/25 border border-gray-200 overflow-visible">
+      <div class="px-5 sm:px-6 py-4 border-b border-gray-200">
         <h3 class="font-bold text-slate-800 flex items-center gap-2">
           <TruckIcon class="w-5 h-5 text-blue-500" /> รายการยานพาหนะ
           <span class="text-sm font-normal text-slate-400">{{ filteredVehicles.length }}/{{ vehicles.length }}</span>
@@ -56,7 +68,7 @@
       </div>
 
       <!-- Mobile: Cards -->
-      <div class="sm:hidden divide-y divide-gray-50" v-if="paginatedVehicles.length">
+      <div class="sm:hidden divide-y divide-gray-100" v-if="paginatedVehicles.length">
         <div v-for="v in paginatedVehicles" :key="v.id" class="px-4 py-3.5">
           <div class="flex items-center gap-3 mb-2">
             <div :class="statusColor(v.status)" class="w-10 h-10 rounded-xl flex items-center justify-center">
@@ -83,6 +95,10 @@
               class="flex-1 flex items-center justify-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold py-2 rounded-xl transition ring-1 ring-blue-200">
               <EyeIcon class="w-3.5 h-3.5" /> ดูข้อมูล
             </button>
+            <button @click="openQr(v)"
+              class="flex items-center justify-center gap-1 bg-violet-50 hover:bg-violet-100 text-violet-600 text-xs font-semibold py-2 px-3 rounded-xl transition ring-1 ring-violet-200">
+              <QrCodeIcon class="w-3.5 h-3.5" />
+            </button>
             <button @click="confirmDelete(v)"
               class="flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold py-2 px-3 rounded-xl transition ring-1 ring-red-200">
               <TrashIcon class="w-3.5 h-3.5" />
@@ -106,7 +122,7 @@
               <th class="text-right py-3 px-4 text-xs font-semibold text-slate-400 uppercase">จัดการ</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-50">
+          <tbody class="divide-y divide-gray-100">
             <tr v-for="v in paginatedVehicles" :key="v.id" class="hover:bg-slate-50/50 transition">
               <td class="py-3 px-4">
                 <div class="flex items-center gap-2">
@@ -136,6 +152,10 @@
                   class="text-amber-600 hover:bg-amber-50 text-xs font-semibold px-2 py-1.5 rounded-lg transition inline-flex items-center gap-1">
                   <PencilSquareIcon class="w-3.5 h-3.5" />
                 </button>
+                <button @click="openQr(v)"
+                  class="text-violet-600 hover:bg-violet-50 text-xs font-semibold px-2 py-1.5 rounded-lg transition inline-flex items-center gap-1">
+                  <QrCodeIcon class="w-3.5 h-3.5" />
+                </button>
                 <button @click="confirmDelete(v)"
                   class="text-red-600 hover:bg-red-50 text-xs font-semibold px-2 py-1.5 rounded-lg transition inline-flex items-center gap-1">
                   <TrashIcon class="w-3.5 h-3.5" />
@@ -152,7 +172,7 @@
         subtitle="กดปุ่ม 'เพิ่มยานพาหนะ' เพื่อเริ่มต้น" />
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="flex items-center justify-between px-5 py-3 border-t border-gray-100">
+      <div v-if="totalPages > 1" class="flex items-center justify-between px-5 py-3 border-t border-gray-200">
         <span class="text-xs text-slate-400">
           แสดง {{ (currentPage - 1) * pageSize + 1 }}–{{ Math.min(currentPage * pageSize, filteredVehicles.length) }}
           จาก {{ filteredVehicles.length }} รายการ
@@ -266,6 +286,60 @@
       </Dialog>
     </TransitionRoot>
 
+    <!-- QR Code Modal -->
+    <TransitionRoot :show="showQrModal" as="template">
+      <Dialog @close="showQrModal = false" class="relative z-50">
+        <TransitionChild as="template" enter="duration-200 ease-out" enter-from="opacity-0" enter-to="opacity-100"
+          leave="duration-150 ease-in" leave-from="opacity-100" leave-to="opacity-0">
+          <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+        </TransitionChild>
+        <div class="fixed inset-0 overflow-y-auto">
+          <div class="flex min-h-full items-center justify-center p-4">
+            <TransitionChild as="template" enter="duration-200 ease-out" enter-from="opacity-0 scale-95"
+              enter-to="opacity-100 scale-100" leave="duration-150 ease-in" leave-from="opacity-100 scale-100"
+              leave-to="opacity-0 scale-95">
+              <DialogPanel class="w-full max-w-xs bg-white rounded-2xl shadow-2xl overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+                  <DialogTitle class="font-bold text-slate-800 flex items-center gap-2">
+                    <QrCodeIcon class="w-5 h-5 text-violet-500" /> QR Code ยานพาหนะ
+                  </DialogTitle>
+                  <button @click="showQrModal = false" class="p-1.5 rounded-lg hover:bg-slate-100 transition text-slate-400">
+                    <XMarkIcon class="w-5 h-5" />
+                  </button>
+                </div>
+                <div class="p-5 flex flex-col items-center gap-4" v-if="qrVehicle">
+                  <!-- QR Card (printable) -->
+                  <div id="qr-print-card" class="bg-white border-2 border-slate-200 rounded-2xl p-5 flex flex-col items-center gap-3 w-full">
+                    <img src="../assets/logo-icon.png" alt="logo" class="w-12 h-12 rounded-full object-cover" />
+                    <div class="text-center">
+                      <div class="font-bold text-slate-800 text-xl tracking-wide">{{ qrVehicle.licensePlate }}</div>
+                      <div class="text-slate-400 text-sm mt-0.5">{{ qrVehicle.type }}</div>
+                    </div>
+                    <img v-if="qrDataUrl" :src="qrDataUrl" alt="QR Code" class="w-48 h-48 rounded-lg" />
+                    <div v-else class="w-48 h-48 flex items-center justify-center bg-slate-50 rounded-lg">
+                      <svg class="animate-spin w-8 h-8 text-violet-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                    </div>
+                    <p class="text-xs text-slate-400 text-center">สแกนเพื่อบันทึกการตรวจเช็ค</p>
+                  </div>
+                  <!-- Actions -->
+                  <div class="flex gap-3 w-full">
+                    <button @click="downloadQr"
+                      class="flex-1 flex items-center justify-center gap-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 font-semibold py-2.5 rounded-xl text-sm transition ring-1 ring-violet-200">
+                      <ArrowDownTrayIcon class="w-4 h-4" /> Download
+                    </button>
+                    <button @click="printQr"
+                      class="flex-1 flex items-center justify-center gap-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold py-2.5 rounded-xl text-sm transition ring-1 ring-slate-200">
+                      <PrinterIcon class="w-4 h-4" /> Print
+                    </button>
+                  </div>
+                </div>
+              </DialogPanel>
+            </TransitionChild>
+          </div>
+        </div>
+      </Dialog>
+    </TransitionRoot>
+
     <!-- Add/Edit Modal -->
     <TransitionRoot :show="showFormModal" as="template">
       <Dialog @close="showFormModal = false" class="relative z-50">
@@ -291,8 +365,8 @@
               </div>
               <div class="p-5 space-y-5">
                 <!-- ข้อมูลทั่วไป -->
-                <fieldset>
-                  <legend class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-1.5">
+                <fieldset class="bg-blue-50/40 rounded-2xl p-4">
+                  <legend class="text-sm font-bold text-blue-700 mb-3 flex items-center gap-1.5">
                     <TruckIcon class="w-4 h-4 text-blue-500" /> ข้อมูลทั่วไป
                   </legend>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -316,8 +390,8 @@
                 </fieldset>
 
                 <!-- พ.ร.บ. -->
-                <fieldset class="border-t pt-4">
-                  <legend class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-1.5">
+                <fieldset class="bg-amber-50/40 rounded-2xl p-4">
+                  <legend class="text-sm font-bold text-amber-700 mb-3 flex items-center gap-1.5">
                     <DocumentTextIcon class="w-4 h-4 text-amber-500" /> พ.ร.บ.
                   </legend>
                   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -335,8 +409,8 @@
                 </fieldset>
 
                 <!-- รอบต่อประกัน -->
-                <fieldset class="border-t pt-4">
-                  <legend class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-1.5">
+                <fieldset class="bg-emerald-50/40 rounded-2xl p-4">
+                  <legend class="text-sm font-bold text-emerald-700 mb-3 flex items-center gap-1.5">
                     <ShieldCheckIcon class="w-4 h-4 text-emerald-500" /> รอบต่อประกัน
                   </legend>
                   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -377,8 +451,9 @@ import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } fro
 import {
   TruckIcon, PlusCircleIcon, PencilSquareIcon, TrashIcon, MagnifyingGlassIcon,
   XCircleIcon, XMarkIcon, EyeIcon, FunnelIcon, DocumentTextIcon, ShieldCheckIcon,
-  ArrowDownTrayIcon, ArrowUpTrayIcon
+  ArrowDownTrayIcon, ArrowUpTrayIcon, QrCodeIcon, PrinterIcon
 } from '@heroicons/vue/24/outline'
+import QRCode from 'qrcode'
 import AppSelect from '../components/AppSelect.vue'
 import AppEmpty from '../components/AppEmpty.vue'
 import AppEditor from '../components/AppEditor.vue'
@@ -396,7 +471,7 @@ const FormInput = {
       h('input', {
         type: p.type || 'text', value: p.modelValue || '', placeholder: p.placeholder || '',
         required: p.required,
-        class: 'w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition',
+        class: 'w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition hover:border-blue-400',
         onInput: e => emit('update:modelValue', e.target.value)
       })
     ])
@@ -447,6 +522,70 @@ const detailVehicle = ref(null)
 const saving = ref(false)
 const currentPage = ref(1)
 const pageSize = 10
+
+// --- QR ---
+const showQrModal = ref(false)
+const qrVehicle = ref(null)
+const qrDataUrl = ref('')
+
+async function openQr(v) {
+  qrVehicle.value = v
+  qrDataUrl.value = ''
+  showQrModal.value = true
+  const url = `${window.location.origin}/inspection?vehicleId=${v.id}`
+  qrDataUrl.value = await QRCode.toDataURL(url, { width: 256, margin: 2, color: { dark: '#1e293b', light: '#ffffff' } })
+}
+
+function downloadQr() {
+  if (!qrDataUrl.value || !qrVehicle.value) return
+  const link = document.createElement('a')
+  link.href = qrDataUrl.value
+  link.download = `QR_${qrVehicle.value.licensePlate.replace(/\s/g, '_')}.png`
+  link.click()
+}
+
+function printQr() {
+  if (!qrDataUrl.value || !qrVehicle.value) return
+  const v = qrVehicle.value
+  const win = window.open('', '_blank')
+  win.document.write(`<!DOCTYPE html><html><head><title>QR - ${v.licensePlate}</title>
+    <style>body{margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:sans-serif}
+    .card{border:2px solid #e2e8f0;border-radius:16px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:12px;width:260px}
+    .plate{font-size:22px;font-weight:bold;color:#1e293b}.type{font-size:13px;color:#94a3b8}
+    .hint{font-size:11px;color:#94a3b8;text-align:center}
+    @media print{@page{size:auto;margin:10mm}}</style></head>
+    <body><div class="card">
+    <div class="plate">${v.licensePlate}</div><div class="type">${v.type}</div>
+    <img src="${qrDataUrl.value}" width="200" height="200"/>
+    <div class="hint">สแกนเพื่อบันทึกการตรวจเช็ค</div>
+    </div><script>window.onload=()=>window.print()<\/script></body></html>`)
+  win.document.close()
+}
+
+async function printAllQR() {
+  const items = []
+  for (const v of vehicles.value) {
+    const url = `${window.location.origin}/inspection?vehicleId=${v.id}`
+    const dataUrl = await QRCode.toDataURL(url, { width: 200, margin: 2, color: { dark: '#1e293b', light: '#ffffff' } })
+    items.push({ v, dataUrl })
+  }
+  const win = window.open('', '_blank')
+  win.document.write(`<!DOCTYPE html><html><head><title>QR Codes - ยานพาหนะ</title>
+    <style>body{font-family:sans-serif;margin:0;padding:20px}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .card{border:2px solid #e2e8f0;border-radius:12px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;page-break-inside:avoid}
+    .plate{font-size:16px;font-weight:bold;color:#1e293b}.type{font-size:11px;color:#94a3b8}
+    .hint{font-size:10px;color:#94a3b8;text-align:center}
+    @media print{@page{size:A4;margin:15mm}}</style></head>
+    <body><div class="grid">
+    ${items.map(({ v, dataUrl }) => `<div class="card">
+      <div class="plate">${v.licensePlate}</div><div class="type">${v.type}</div>
+      <img src="${dataUrl}" width="160" height="160"/>
+      <div class="hint">สแกนเพื่อบันทึกการตรวจเช็ค</div>
+    </div>`).join('')}
+    </div><script>window.onload=()=>window.print()<\/script></body></html>`)
+  win.document.close()
+}
 
 const defaultForm = () => ({
   type: '', licensePlate: '', chassisNumber: '', engineNumber: '',

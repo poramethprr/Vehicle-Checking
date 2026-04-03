@@ -3,7 +3,7 @@
     <div class="relative" ref="wrapperRef">
       <ListboxButton
         @click="computePos(open)"
-        class="relative w-full cursor-pointer rounded-xl bg-white border border-slate-200 py-3 pl-4 pr-10 text-left text-sm shadow-sm transition-all hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        class="relative w-full cursor-pointer rounded-xl bg-white border border-slate-300 py-3 pl-4 pr-10 text-left text-sm shadow-sm transition-all hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         :class="{ 'bg-slate-50!': !modelValue }">
         <span class="flex items-center gap-2.5 truncate">
           <component v-if="selectedOption?.icon" :is="selectedOption.icon" class="w-5 h-5 text-slate-400 shrink-0" />
