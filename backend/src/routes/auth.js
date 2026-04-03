@@ -1,33 +1,40 @@
 const express = require('express')
 const router = express.Router()
+const bcrypt = require('bcryptjs')
 const prisma = require('../services/prisma')
 const { logActivity } = require('../services/logger')
 
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { username, phone, role, regCode } = req.body
-    if (!username || !phone || !role || !regCode) {
+    const { username, phone, password, role, regCode } = req.body
+    if (!username || !phone || !password || !role || !regCode) {
       return res.status(400).json({ error: 'กรุณากรอกข้อมูลให้ครบถ้วน' })
     }
 
-    // ตรวจสอบรหัสสมัครสมาชิกจาก ENV
     const validCode = role === 'ADMIN' ? process.env.REG_CODE_ADMIN : process.env.REG_CODE_STAFF
     if (regCode !== validCode) {
       return res.status(401).json({ error: 'รหัสสมัครสมาชิกไม่ถูกต้องสำหรับบทบาทนี้' })
     }
 
-    const phoneTrimmed = phone.trim()
-    const existing = await prisma.user.findUnique({ where: { phone: phoneTrimmed } })
-    if (existing) {
+    const existingUsername = await prisma.user.findUnique({ where: { username: username.trim() } })
+    if (existingUsername) {
+      return res.status(400).json({ error: 'ชื่อผู้ใช้นี้ถูกใช้งานแล้ว' })
+    }
+
+    const existingPhone = await prisma.user.findUnique({ where: { phone: phone.trim() } })
+    if (existingPhone) {
       return res.status(400).json({ error: 'เบอร์โทรนี้ถูกใช้งานแล้ว' })
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10)
+
     const user = await prisma.user.create({
-      data: { 
-        username: username.trim(), 
-        phone: phoneTrimmed,
-        role: role
+      data: {
+        username: username.trim(),
+        phone: phone.trim(),
+        password: hashedPassword,
+        role
       }
     })
 
@@ -41,20 +48,27 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   try {
-    let { phone } = req.body
-    if (!phone) {
-      return res.status(400).json({ error: 'กรุณากรอกเบอร์โทร' })
+    const { username, password } = req.body
+    if (!username || !password) {
+      return res.status(400).json({ error: 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน' })
     }
 
-    phone = phone.trim()
-    const user = await prisma.user.findUnique({ where: { phone } })
+    const user = await prisma.user.findUnique({ where: { username: username.trim() } })
     if (!user) {
-      return res.status(404).json({ error: 'ไม่พบผู้ใช้งาน' })
+      return res.status(401).json({ error: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' })
     }
 
-    // ในระบบจริงควรใช้ JWT สร้าง Token ตรงนี้
+    if (!user.password) {
+      return res.status(401).json({ error: 'บัญชีนี้ยังไม่ได้ตั้งรหัสผ่าน กรุณาติดต่อผู้ดูแลระบบ' })
+    }
+
+    const valid = await bcrypt.compare(password, user.password)
+    if (!valid) {
+      return res.status(401).json({ error: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' })
+    }
+
     await logActivity(user.id, 'LOGIN', `ผู้ใช้ ${user.username} เข้าสู่ระบบ`, 'User', user.id)
-    res.json({ user, token: 'session-' + user.id }) // ส่ง mock token ไปก่อนเพื่อให้ frontend ทำงานต่อได้
+    res.json({ user, token: 'session-' + user.id })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

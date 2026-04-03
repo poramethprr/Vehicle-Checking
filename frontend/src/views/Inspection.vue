@@ -1,12 +1,20 @@
 <template>
   <div>
-    <div class="mb-6">
-      <h1 class="text-xl sm:text-2xl font-bold text-slate-800">บันทึกการตรวจเช็ค</h1>
-      <p class="text-sm text-slate-400 mt-0.5">เลือกยานพาหนะและวันที่เพื่อเริ่มบันทึกการตรวจ</p>
+    <div class="relative bg-linear-to-r from-blue-600 to-indigo-600 rounded-2xl px-6 py-5 mb-6 overflow-hidden shadow-md shadow-blue-200">
+      <div class="absolute -top-6 -right-6 w-28 h-28 bg-white/10 rounded-full pointer-events-none"></div>
+      <div class="relative flex items-center gap-3">
+        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+          <ClipboardDocumentCheckIcon class="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold text-white">บันทึกการตรวจเช็ค</h1>
+          <p class="text-blue-200 text-xs mt-0.5">เลือกยานพาหนะและวันที่เพื่อเริ่มบันทึกการตรวจ</p>
+        </div>
+      </div>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6 mb-5">
+    <div class="bg-linear-to-br from-white to-blue-50/40 rounded-2xl shadow-lg shadow-blue-200/40 border border-blue-200 p-5 sm:p-6 mb-5">
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
@@ -15,7 +23,7 @@
           <div class="relative">
             <CalendarIcon class="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input v-model="inspectionDate" type="date"
-              class="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm shadow-sm hover:border-blue-300" />
+              class="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm shadow-sm hover:border-blue-400" />
           </div>
         </div>
         <div>
@@ -35,8 +43,8 @@
     </div>
 
     <!-- Checklist -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden" v-if="selectedVehicleId && inspectionDate">
-      <div class="px-5 sm:px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+    <div class="bg-white rounded-2xl shadow-xl shadow-slate-500/25 border border-gray-200 overflow-hidden" v-if="selectedVehicleId && inspectionDate">
+      <div class="px-5 sm:px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <h3 class="font-bold text-slate-800 flex items-center gap-2">
           <ClipboardDocumentCheckIcon class="w-5 h-5 text-blue-500" />
           รายการตรวจเช็ค
@@ -54,7 +62,7 @@
       </div>
 
       <!-- Mobile: Card layout -->
-      <div class="sm:hidden divide-y divide-gray-50">
+      <div class="sm:hidden divide-y divide-gray-100">
         <div v-for="item in checklistItems" :key="item.number" class="p-4">
           <div class="flex items-start gap-3 mb-3">
             <span :class="[
@@ -101,7 +109,7 @@
               <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase">หมายเหตุ</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-50">
+          <tbody class="divide-y divide-gray-100">
             <tr v-for="item in checklistItems" :key="item.number"
               :class="['transition-colors', item.status === 'ABNORMAL' ? 'bg-red-50/30' : 'hover:bg-slate-50/50']">
               <td class="text-center py-3 px-4">
@@ -141,26 +149,55 @@
         </table>
       </div>
 
-      <!-- Save button -->
-      <div class="px-5 sm:px-6 py-4 bg-slate-50/50 border-t border-gray-100">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <!-- Desktop save bar -->
+      <div class="hidden sm:block px-6 py-4 bg-slate-50/50 border-t border-gray-200">
+        <div class="flex items-center justify-between gap-3">
           <div class="text-xs text-slate-400">
             ปกติ <span class="font-bold text-emerald-500">{{ normalCount }}</span> · ผิดปกติ <span class="font-bold text-red-500">{{ abnormalCount }}</span> รายการ
           </div>
           <button @click="saveInspection" :disabled="saving"
-            class="w-full sm:w-auto bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:from-slate-300 disabled:to-slate-300 text-white font-semibold px-8 py-3 rounded-xl transition-all text-sm shadow-lg shadow-emerald-200/50 hover:shadow-xl active:scale-[0.98] flex items-center justify-center gap-2">
+            class="bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:from-slate-300 disabled:to-slate-300 text-white font-semibold px-8 py-3 rounded-xl transition-all text-sm shadow-lg shadow-emerald-200/50 hover:shadow-xl active:scale-[0.98] flex items-center gap-2">
             <span v-if="saving" class="flex items-center gap-2">
               <svg class="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
               กำลังบันทึก...
             </span>
             <span v-else class="flex items-center gap-1.5">
-              <CheckCircleIcon class="w-4.5 h-4.5" />
+              <CheckCircleIcon class="w-4 h-4" />
               {{ editingId ? 'อัพเดทการตรวจเช็ค' : 'บันทึกการตรวจเช็ค' }}
             </span>
           </button>
         </div>
       </div>
     </div>
+
+    <!-- Mobile sticky save bar -->
+    <Teleport to="body">
+      <div v-if="selectedVehicleId && inspectionDate" class="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 px-4 py-3 shadow-xl">
+        <div class="flex items-center gap-3">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-linear-to-r from-emerald-400 to-emerald-500 transition-all duration-500" :style="{ width: progressPercent + '%' }"></div>
+              </div>
+              <span class="text-xs font-semibold text-slate-500 shrink-0">{{ normalCount + abnormalCount }}/{{ checklistItems.length }}</span>
+            </div>
+            <div class="text-xs text-slate-400">
+              <span class="text-emerald-600 font-semibold">{{ normalCount }} ปกติ</span>
+              <template v-if="abnormalCount"> · <span class="text-red-500 font-semibold">{{ abnormalCount }} ผิดปกติ</span></template>
+            </div>
+          </div>
+          <button @click="saveInspection" :disabled="saving"
+            class="shrink-0 bg-linear-to-r from-emerald-500 to-teal-600 disabled:from-slate-300 disabled:to-slate-300 text-white font-bold px-5 py-3 rounded-xl text-sm transition active:scale-[0.97] shadow-lg shadow-emerald-200 flex items-center gap-2">
+            <svg v-if="saving" class="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+            <CheckCircleIcon v-else class="w-4 h-4" />
+            {{ saving ? 'บันทึก...' : (editingId ? 'อัพเดท' : 'บันทึก') }}
+          </button>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Spacer for mobile sticky bar -->
+    <div v-if="selectedVehicleId && inspectionDate" class="sm:hidden h-20"></div>
   </div>
 </template>
 
@@ -260,10 +297,12 @@ onMounted(async () => {
   try {
     vehicles.value = (await api.get('/vehicles')).data
     // Auto-load if coming from Reports edit
-    if (route.query.vehicleId && route.query.date) {
+    if (route.query.vehicleId) {
       selectedVehicleId.value = Number(route.query.vehicleId)
-      inspectionDate.value = route.query.date
-      await loadExisting()
+      if (route.query.date) {
+        inspectionDate.value = route.query.date
+        await loadExisting()
+      }
     }
   } catch (err) { console.error(err) }
 })

@@ -1,12 +1,20 @@
 <template>
   <div>
-    <div class="mb-6">
-      <h1 class="text-xl sm:text-2xl font-bold text-slate-800">รายงานการตรวจเช็ค</h1>
-      <p class="text-sm text-slate-400 mt-0.5">ดูประวัติและรายละเอียดการตรวจเช็คทั้งหมด</p>
+    <div class="relative bg-linear-to-r from-violet-600 to-purple-600 rounded-2xl px-6 py-5 mb-6 overflow-hidden shadow-md shadow-violet-200">
+      <div class="absolute -top-6 -right-6 w-28 h-28 bg-white/10 rounded-full pointer-events-none"></div>
+      <div class="relative flex items-center gap-3">
+        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+          <ChartBarIcon class="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold text-white">รายงานการตรวจเช็ค</h1>
+          <p class="text-violet-200 text-xs mt-0.5">ดูประวัติและรายละเอียดการตรวจเช็คทั้งหมด</p>
+        </div>
+      </div>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6 mb-5 overflow-visible">
+    <div class="bg-white rounded-2xl shadow-xl shadow-slate-500/25 border border-gray-200 p-5 sm:p-6 mb-5 overflow-visible">
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div>
           <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
@@ -36,8 +44,8 @@
     </div>
 
     <!-- Results -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-visible" v-if="inspections.length">
-      <div class="px-5 sm:px-6 py-4 border-b border-gray-100">
+    <div class="bg-white rounded-2xl shadow-xl shadow-slate-500/25 border border-gray-200 overflow-visible" v-if="inspections.length">
+      <div class="px-5 sm:px-6 py-4 border-b border-gray-200">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h3 class="font-bold text-slate-800">ผลการตรวจเช็ค
             <span class="text-sm font-normal text-slate-400 ml-1">{{ filteredInspections.length }}/{{ inspections.length }} รายการ</span>
@@ -47,7 +55,7 @@
             <div class="relative flex-1 sm:flex-none sm:w-52">
               <MagnifyingGlassIcon class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input v-model="searchText" placeholder="ค้นหาทะเบียน, ผู้ตรวจ..."
-                class="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white outline-none text-sm transition" />
+                class="w-full pl-9 pr-8 py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm shadow-sm transition hover:border-blue-400" />
               <button v-if="searchText" @click="searchText = ''" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                 <XCircleIcon class="w-4 h-4" />
               </button>
@@ -60,7 +68,7 @@
       </div>
 
       <!-- Mobile -->
-      <div class="sm:hidden divide-y divide-gray-50">
+      <div class="sm:hidden divide-y divide-gray-100">
         <div v-for="ins in filteredInspections" :key="ins.id" class="px-4 py-3.5">
           <div @click="showDetail(ins)" class="cursor-pointer">
             <div class="flex justify-between items-start mb-1">
@@ -100,7 +108,7 @@
               <th class="text-center py-3 px-6 text-xs font-semibold text-slate-400 uppercase tracking-wider"></th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-50">
+          <tbody class="divide-y divide-gray-100">
             <tr v-for="ins in filteredInspections" :key="ins.id" class="hover:bg-slate-50/50 transition">
               <td class="py-3.5 px-6 text-sm text-slate-500">{{ formatDate(ins.inspectionDate) }}</td>
               <td class="py-3.5 px-6">
@@ -145,7 +153,7 @@
       </div>
     </div>
 
-    <div v-else-if="searched" class="bg-white rounded-2xl shadow-sm border border-gray-100">
+    <div v-else-if="searched" class="bg-white rounded-2xl shadow-xl shadow-slate-500/25 border border-gray-200">
       <AppEmpty :icon="ChartBarIcon" title="ไม่พบข้อมูล" subtitle="ไม่พบข้อมูลการตรวจเช็คในช่วงเวลาที่เลือก" />
     </div>
 
@@ -160,7 +168,7 @@
             enter="ease-out duration-300" enter-from="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100"
             leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95">
             <DialogPanel class="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-              <div class="sticky top-0 bg-white border-b border-gray-100 px-5 sm:px-6 py-4 flex items-center justify-between">
+              <div class="sticky top-0 bg-white border-b border-gray-200 px-5 sm:px-6 py-4 flex items-center justify-between">
                 <DialogTitle class="font-bold text-slate-800 text-lg">รายละเอียดการตรวจเช็ค</DialogTitle>
                 <button @click="selectedInspection = null" class="p-1.5 hover:bg-slate-100 rounded-lg transition">
                   <XMarkIcon class="w-5 h-5 text-slate-400" />
