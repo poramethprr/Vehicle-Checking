@@ -30,25 +30,49 @@ enum BookingStatus {
   CANCELLED
 }
 
-model User {
-  id          Int          @id @default(autoincrement())
-  username    String       @unique
-  phone       String       @unique
-  password    String?
-  role        Role         @default(STAFF)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+enum RenewalType {
+  PRB
+  TAX
+  INS
+}
 
-  inspections       Inspection[]
-  activityLogs      ActivityLog[]
-  bookingsRequested Booking[]     @relation("BookingRequester")
-  bookingsDriven    Booking[]     @relation("BookingDriver")
+enum RepairStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model User {
+  id              Int          @id @default(autoincrement())
+  username        String       @unique
+  displayName     String?
+  phone           String       @unique
+  password        String?
+  role            Role         @default(STAFF)
+  licenseNumber   String?
+  licenseExpiry   DateTime?
+  licensePhoto    String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  inspections          Inspection[]
+  activityLogs         ActivityLog[]
+  bookingsRequested    Booking[]          @relation("BookingRequester")
+  bookingsDriven       Booking[]          @relation("BookingDriver")
+  returnRequests       Booking[]          @relation("BookingReturnRequester")
+  renewals             VehicleRenewal[]
+  repairsRequested     RepairRequest[]    @relation("RepairRequester")
+  repairsApproved      RepairRequest[]    @relation("RepairApprover")
+  fuelLogs             FuelLog[]
+  accidents            AccidentReport[]
 }
 
 model Vehicle {
   id              Int            @id @default(autoincrement())
   type            String
   licensePlate    String         @unique
+  registrationBookNumber String?
   chassisNumber   String?
   engineNumber    String?
   currentMileage  Float?
@@ -68,6 +92,7 @@ model Vehicle {
   prbTaxDate            DateTime?
   prbThirdParty         Boolean        @default(false)
   prbExpiry             DateTime?
+  prbContact            String?
 
   // รอบต่อประกัน
   insLmg                Boolean        @default(false)
@@ -80,14 +105,20 @@ model Vehicle {
   insDate               DateTime?
   insTaxDate            DateTime?
   insExpiry             DateTime?
+  insContact            String?
 
   taxRenewalDate  DateTime?
+  photo           String?
 
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
   inspections     Inspection[]
   bookings        Booking[]
+  renewals        VehicleRenewal[]
+  repairs         RepairRequest[]
+  fuelLogs        FuelLog[]
+  accidents       AccidentReport[]
 }
 
 model Booking {
@@ -111,12 +142,20 @@ model Booking {
   distance        Float?         // ระยะทาง (คำนวณอัตโนมัติ = mileageIn - mileageOut)
   returnNote      String?        // หมายเหตุตอนคืน
 
+  // ข้อมูลขอคืน (pending return — staff submits, admin approves)
+  pendingMileageIn      Float?
+  pendingMileageInPhoto String?
+  pendingReturnNote     String?
+  returnRequestedAt     DateTime?
+  returnRequestedById   Int?
+
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
   vehicle         Vehicle        @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   requester       User           @relation("BookingRequester", fields: [requesterId], references: [id], onDelete: Cascade)
   driver          User           @relation("BookingDriver", fields: [driverId], references: [id], onDelete: Cascade)
+  returnRequester User?          @relation("BookingReturnRequester", fields: [returnRequestedById], references: [id], onDelete: SetNull)
 }
 
 model Inspection {
@@ -145,6 +184,83 @@ model InspectionDetail {
   inspection    Inspection       @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
 
   @@unique([inspectionId, itemNumber])
+}
+
+model VehicleRenewal {
+  id           Int         @id @default(autoincrement())
+  vehicleId    Int
+  userId       Int
+  type         RenewalType
+  provider     String?     // บริษัทที่ต่อ (เช่น "วิริยะ, LMG")
+  expiryDate   DateTime    // วันหมดอายุใหม่ที่ตั้งไว้
+  documentPath String?     // path ของไฟล์แนบ
+  note         String?
+  createdAt    DateTime    @default(now())
+
+  vehicle      Vehicle     @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RepairRequest {
+  id             Int           @id @default(autoincrement())
+  vehicleId      Int
+  userId         Int
+  title          String
+  detail         String
+  documentPath   String?       // ใบเสนอราคา (รูป หรือ PDF)
+  estimatedCost  Float?        // วงเงินประมาณการ (บาท)
+  status         RepairStatus  @default(PENDING)
+  approvedById   Int?
+  approvedAt     DateTime?
+  approverNote   String?
+  completedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  vehicle        Vehicle       @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  user           User          @relation("RepairRequester", fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy     User?         @relation("RepairApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+}
+
+model FuelLog {
+  id                 Int      @id @default(autoincrement())
+  vehicleId          Int
+  userId             Int
+  mileageBefore      Float
+  mileageAfter       Float?
+  liters             Float
+  amount             Float
+  mileagePhotoBefore String?
+  mileagePhotoAfter  String?
+  gaugePhotoBefore   String?
+  gaugePhotoAfter    String?
+  pumpPhoto          String?
+  receiptPhoto       String?
+  note               String?
+  createdAt          DateTime @default(now())
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AccidentReport {
+  id            Int      @id @default(autoincrement())
+  vehicleId     Int
+  userId        Int
+  location      String
+  damagedParts  String
+  detail        String?
+  photo1        String?
+  photo2        String?
+  photo3        String?
+  photo4        String?
+  photo5        String?
+  photo6        String?
+  note          String?
+  createdAt     DateTime @default(now())
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ActivityLog {

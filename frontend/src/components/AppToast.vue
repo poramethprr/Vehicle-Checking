@@ -11,10 +11,10 @@
         <div v-for="toast in toasts" :key="toast.id"
           :class="[
             'rounded-xl shadow-lg border px-4 py-3.5 flex items-start gap-3 backdrop-blur-sm cursor-pointer',
-            toast.type === 'success' ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800' : '',
-            toast.type === 'error' ? 'bg-red-50/95 border-red-200 text-red-800' : '',
-            toast.type === 'info' ? 'bg-blue-50/95 border-blue-200 text-blue-800' : '',
-            toast.type === 'warning' ? 'bg-amber-50/95 border-amber-200 text-amber-800' : ''
+            toast.type === 'success' ? 'bg-emerald-50/95 dark:bg-emerald-950/90 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200' : '',
+            toast.type === 'error' ? 'bg-red-50/95 dark:bg-red-950/90 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200' : '',
+            toast.type === 'info' ? 'bg-blue-50/95 dark:bg-blue-950/90 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200' : '',
+            toast.type === 'warning' ? 'bg-amber-50/95 dark:bg-amber-950/90 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200' : ''
           ]"
           @click="removeToast(toast.id)">
           <div :class="[

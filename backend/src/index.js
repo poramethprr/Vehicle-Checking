@@ -10,6 +10,10 @@ const userRoutes = require('./routes/users')
 const logRoutes = require('./routes/logs')
 const exportRoutes = require('./routes/export')
 const bookingRoutes = require('./routes/bookings')
+const renewalRoutes = require('./routes/renewals')
+const repairRoutes = require('./routes/repairs')
+const fuelRoutes = require('./routes/fuels')
+const accidentRoutes = require('./routes/accidents')
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -28,6 +32,10 @@ app.use('/api/users', userRoutes)
 app.use('/api/logs', logRoutes)
 app.use('/api/export', exportRoutes)
 app.use('/api/bookings', bookingRoutes)
+app.use('/api/renewals', renewalRoutes)
+app.use('/api/repairs', repairRoutes)
+app.use('/api/fuels', fuelRoutes)
+app.use('/api/accidents', accidentRoutes)
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' })

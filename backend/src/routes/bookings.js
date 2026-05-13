@@ -4,13 +4,24 @@ const prisma = require('../services/prisma')
 const { logActivity } = require('../services/logger')
 const upload = require('../middleware/upload')
 
+const BOOKING_INCLUDE = {
+  vehicle: { select: { id: true, type: true, licensePlate: true, photo: true } },
+  requester: { select: { id: true, username: true, displayName: true, phone: true } },
+  driver: { select: { id: true, username: true, displayName: true, phone: true } },
+  returnRequester: { select: { id: true, username: true, displayName: true } }
+}
+
 // Get all bookings (with filters)
 router.get('/', async (req, res) => {
   try {
     const { vehicleId, status, driverId, startDate, endDate, page = 1, limit = 50 } = req.query
     const where = {}
 
-    if (vehicleId) where.vehicleId = Number(vehicleId)
+    if (vehicleId) {
+      const ids = Array.isArray(vehicleId) ? vehicleId : vehicleId.split(',')
+      const numIds = ids.map(Number).filter(Boolean)
+      where.vehicleId = numIds.length === 1 ? numIds[0] : { in: numIds }
+    }
     if (status) where.status = status
     if (driverId) where.driverId = Number(driverId)
 
@@ -23,11 +34,7 @@ router.get('/', async (req, res) => {
     const [bookings, total] = await Promise.all([
       prisma.booking.findMany({
         where,
-        include: {
-          vehicle: { select: { id: true, type: true, licensePlate: true } },
-          requester: { select: { id: true, username: true, phone: true } },
-          driver: { select: { id: true, username: true, phone: true } }
-        },
+        include: BOOKING_INCLUDE,
         orderBy: { checkoutDate: 'desc' },
         skip: (Number(page) - 1) * Number(limit),
         take: Number(limit)
@@ -46,11 +53,7 @@ router.get('/:id', async (req, res) => {
   try {
     const booking = await prisma.booking.findUnique({
       where: { id: Number(req.params.id) },
-      include: {
-        vehicle: true,
-        requester: { select: { id: true, username: true, phone: true } },
-        driver: { select: { id: true, username: true, phone: true } }
-      }
+      include: { vehicle: true, ...BOOKING_INCLUDE }
     })
     if (!booking) return res.status(404).json({ error: 'ไม่พบข้อมูลการเบิกรถ' })
     res.json(booking)
@@ -72,7 +75,7 @@ router.get('/available/vehicles', async (req, res) => {
   }
 })
 
-// Checkout (เบิกรถ)
+// Checkout (เบิกรถ — Admin only, enforced on frontend)
 router.post('/checkout', upload.single('mileageOutPhoto'), async (req, res) => {
   try {
     const { vehicleId, requesterId, driverId, destination, purpose, mileageOut } = req.body
@@ -81,7 +84,6 @@ router.post('/checkout', upload.single('mileageOutPhoto'), async (req, res) => {
       return res.status(400).json({ error: 'กรุณากรอกข้อมูลให้ครบ' })
     }
 
-    // Check if vehicle is already checked out
     const activeBooking = await prisma.booking.findFirst({
       where: { vehicleId: Number(vehicleId), status: 'CHECKED_OUT' }
     })
@@ -97,13 +99,9 @@ router.post('/checkout', upload.single('mileageOutPhoto'), async (req, res) => {
         mileageOut: Number(mileageOut),
         mileageOutPhoto: req.file ? `/uploads/${req.file.filename}` : null
       },
-      include: {
-        vehicle: { select: { type: true, licensePlate: true } },
-        driver: { select: { username: true } }
-      }
+      include: BOOKING_INCLUDE
     })
 
-    // Update vehicle: set IN_USE + update mileage
     await prisma.vehicle.update({
       where: { id: Number(vehicleId) },
       data: { status: 'IN_USE', currentMileage: Number(mileageOut) }
@@ -121,13 +119,48 @@ router.post('/checkout', upload.single('mileageOutPhoto'), async (req, res) => {
   }
 })
 
-// Return (คืนรถ)
-router.put('/return/:id', upload.single('mileageInPhoto'), async (req, res) => {
+// Return request (ขอคืนรถ — Staff submits, saves pending data)
+router.put('/return-request/:id', upload.single('pendingMileageInPhoto'), async (req, res) => {
   try {
-    const { mileageIn, returnNote, userId } = req.body
+    const { pendingMileageIn, pendingReturnNote, userId } = req.body
     const bookingId = Number(req.params.id)
 
-    if (!mileageIn) return res.status(400).json({ error: 'กรุณากรอกเลขไมล์ตอนคืน' })
+    if (!pendingMileageIn) return res.status(400).json({ error: 'กรุณากรอกเลขไมล์ตอนคืน' })
+    if (!userId) return res.status(400).json({ error: 'ไม่พบข้อมูลผู้ใช้' })
+
+    const existing = await prisma.booking.findUnique({ where: { id: bookingId } })
+    if (!existing) return res.status(404).json({ error: 'ไม่พบข้อมูลการเบิก' })
+    if (existing.status !== 'CHECKED_OUT') return res.status(400).json({ error: 'รถคันนี้คืนแล้ว' })
+
+    const booking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        pendingMileageIn: Number(pendingMileageIn),
+        pendingMileageInPhoto: req.file ? `/uploads/${req.file.filename}` : null,
+        pendingReturnNote: pendingReturnNote || null,
+        returnRequestedAt: new Date(),
+        returnRequestedById: Number(userId)
+      },
+      include: BOOKING_INCLUDE
+    })
+
+    await logActivity(
+      Number(userId), 'REQUEST_RETURN',
+      `ขอคืนรถ ${booking.vehicle.licensePlate} ไมล์: ${pendingMileageIn}`,
+      'Booking', booking.id
+    )
+
+    res.json(booking)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Approve return (อนุมัติคืน — Admin approves pending return request)
+router.put('/approve-return/:id', async (req, res) => {
+  try {
+    const { userId } = req.body
+    const bookingId = Number(req.params.id)
 
     const existing = await prisma.booking.findUnique({
       where: { id: bookingId },
@@ -135,36 +168,76 @@ router.put('/return/:id', upload.single('mileageInPhoto'), async (req, res) => {
     })
     if (!existing) return res.status(404).json({ error: 'ไม่พบข้อมูลการเบิก' })
     if (existing.status !== 'CHECKED_OUT') return res.status(400).json({ error: 'รถคันนี้คืนแล้ว' })
+    if (!existing.pendingMileageIn) return res.status(400).json({ error: 'ยังไม่มีคำขอคืนรถ' })
 
-    const distance = Number(mileageIn) - existing.mileageOut
+    const mileageIn = existing.pendingMileageIn
+    const distance = mileageIn - existing.mileageOut
 
     const booking = await prisma.booking.update({
       where: { id: bookingId },
       data: {
         status: 'RETURNED',
         returnDate: new Date(),
-        mileageIn: Number(mileageIn),
-        mileageInPhoto: req.file ? `/uploads/${req.file.filename}` : null,
+        mileageIn,
+        mileageInPhoto: existing.pendingMileageInPhoto,
         distance,
-        returnNote: returnNote || null
+        returnNote: existing.pendingReturnNote,
+        pendingMileageIn: null,
+        pendingMileageInPhoto: null,
+        pendingReturnNote: null,
+        returnRequestedAt: null,
+        returnRequestedById: null
       },
-      include: {
-        vehicle: { select: { type: true, licensePlate: true } },
-        requester: { select: { username: true } },
-        driver: { select: { username: true } }
-      }
+      include: BOOKING_INCLUDE
     })
 
-    // Update vehicle: back to ACTIVE + update mileage
     await prisma.vehicle.update({
       where: { id: existing.vehicleId },
-      data: { status: 'ACTIVE', currentMileage: Number(mileageIn) }
+      data: { status: 'ACTIVE', currentMileage: mileageIn }
     })
 
     const uid = userId ? Number(userId) : existing.requesterId
     await logActivity(
       uid, 'RETURN_VEHICLE',
-      `คืนรถ ${booking.vehicle.licensePlate} ไมล์: ${mileageIn} ระยะทาง: ${distance} กม.`,
+      `อนุมัติคืนรถ ${existing.vehicle.licensePlate} ไมล์: ${mileageIn} ระยะทาง: ${distance} กม.`,
+      'Booking', booking.id
+    )
+
+    res.json(booking)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Reject return request (Admin rejects — clears pending data)
+router.put('/reject-return/:id', async (req, res) => {
+  try {
+    const { userId } = req.body
+    const bookingId = Number(req.params.id)
+
+    const existing = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { vehicle: { select: { licensePlate: true } } }
+    })
+    if (!existing) return res.status(404).json({ error: 'ไม่พบข้อมูลการเบิก' })
+    if (!existing.pendingMileageIn) return res.status(400).json({ error: 'ไม่มีคำขอคืนรถ' })
+
+    const booking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        pendingMileageIn: null,
+        pendingMileageInPhoto: null,
+        pendingReturnNote: null,
+        returnRequestedAt: null,
+        returnRequestedById: null
+      },
+      include: BOOKING_INCLUDE
+    })
+
+    const uid = userId ? Number(userId) : existing.requesterId
+    await logActivity(
+      uid, 'REJECT_RETURN',
+      `ไม่อนุมัติคำขอคืนรถ ${existing.vehicle.licensePlate}`,
       'Booking', booking.id
     )
 
@@ -187,7 +260,6 @@ router.put('/cancel/:id', async (req, res) => {
       include: { vehicle: { select: { licensePlate: true } } }
     })
 
-    // Return vehicle status to ACTIVE
     await prisma.vehicle.update({
       where: { id: existing.vehicleId },
       data: { status: 'ACTIVE' }

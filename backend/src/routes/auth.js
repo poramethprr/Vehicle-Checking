@@ -7,7 +7,7 @@ const { logActivity } = require('../services/logger')
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { username, phone, password, role, regCode } = req.body
+    const { username, displayName, phone, password, role, regCode } = req.body
     if (!username || !phone || !password || !role || !regCode) {
       return res.status(400).json({ error: 'กรุณากรอกข้อมูลให้ครบถ้วน' })
     }
@@ -32,6 +32,7 @@ router.post('/register', async (req, res) => {
     const user = await prisma.user.create({
       data: {
         username: username.trim(),
+        displayName: displayName ? displayName.trim() : null,
         phone: phone.trim(),
         password: hashedPassword,
         role

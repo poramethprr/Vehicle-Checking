@@ -1,65 +1,75 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12 relative overflow-hidden">
+  <div class="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 px-4 py-12 relative overflow-hidden">
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
       <div class="absolute -top-24 -left-24 w-96 h-96 bg-emerald-100 rounded-full blur-3xl opacity-50"></div>
       <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50"></div>
     </div>
 
-    <div class="relative bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/60 w-full max-w-md border border-slate-100">
-      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-slate-100 rounded-b-full"></div>
+    <div class="relative bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-xl shadow-slate-200/60 dark:shadow-black/30 w-full max-w-md border border-slate-100 dark:border-slate-700">
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-b-full"></div>
 
       <div class="p-8 sm:p-10">
         <div class="flex justify-center mb-6">
           <img src="../assets/logo-icon.png" alt="logo" class="w-20 h-20 rounded-full shadow-lg shadow-emerald-200 object-cover" />
         </div>
 
-        <h2 class="text-center text-2xl font-bold text-slate-800 mb-1">สร้างบัญชีใหม่</h2>
-        <p class="text-center text-sm text-slate-400 mb-8">ระบบตรวจเช็คยานพาหนะ</p>
+        <h2 class="text-center text-2xl font-bold text-slate-800 dark:text-white mb-1">สร้างบัญชีใหม่</h2>
+        <p class="text-center text-sm text-slate-400 dark:text-slate-500 mb-8">ระบบตรวจเช็คยานพาหนะ</p>
 
         <transition enter-active-class="transition duration-200" enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0">
-          <div v-if="error" class="bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl px-4 py-3 mb-5 flex items-center gap-2">
+          <div v-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 text-red-600 dark:text-red-400 text-sm rounded-xl px-4 py-3 mb-5 flex items-center gap-2">
             <ExclamationCircleIcon class="w-5 h-5 shrink-0" />
             {{ error }}
           </div>
         </transition>
 
         <transition enter-active-class="transition duration-200" enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0">
-          <div v-if="success" class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm rounded-xl px-4 py-3 mb-5 flex items-center gap-2">
+          <div v-if="success" class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-400 text-sm rounded-xl px-4 py-3 mb-5 flex items-center gap-2">
             <CheckCircleIcon class="w-5 h-5 shrink-0" />
             {{ success }}
           </div>
         </transition>
 
         <form @submit.prevent="register" class="space-y-5">
-          <!-- ชื่อผู้ใช้ -->
+          <!-- ชื่อในระบบ -->
           <div class="space-y-1.5">
-            <label class="block text-sm font-semibold text-slate-600 mb-1.5">ชื่อผู้ใช้</label>
+            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1.5">ชื่อในระบบ <span class="text-red-500">*</span></label>
             <div class="relative">
-              <UserIcon class="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input v-model="username" type="text" placeholder="กรอกชื่อ-นามสกุล หรือชื่อเรียก" required autofocus
-                class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-300 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white outline-none transition-all text-sm sm:text-base" />
+              <UserIcon class="w-5 h-5 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input v-model="displayName" type="text" placeholder="ชื่อ-นามสกุล หรือชื่อเรียก (จะแสดงผลในระบบ)" required autofocus
+                class="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-600 outline-none transition-all text-sm sm:text-base text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-400" />
+            </div>
+          </div>
+
+          <!-- ชื่อผู้ใช้ (login) -->
+          <div class="space-y-1.5">
+            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1.5">ชื่อผู้ใช้ (สำหรับ Login) <span class="text-red-500">*</span></label>
+            <div class="relative">
+              <UserIcon class="w-5 h-5 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input v-model="username" type="text" placeholder="ชื่อที่ใช้เข้าสู่ระบบ (ห้ามซ้ำ)" required
+                class="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-600 outline-none transition-all text-sm sm:text-base text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-400" />
             </div>
           </div>
 
           <!-- เบอร์โทร -->
           <div class="space-y-1.5">
-            <label class="block text-sm font-semibold text-slate-600 mb-1.5">เบอร์โทรศัพท์</label>
+            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1.5">เบอร์โทรศัพท์</label>
             <div class="relative">
-              <PhoneIcon class="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <PhoneIcon class="w-5 h-5 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input v-model="phone" type="tel" placeholder="0xx-xxx-xxxx" required
-                class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-300 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white outline-none transition-all text-sm sm:text-base" />
+                class="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-600 outline-none transition-all text-sm sm:text-base text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-400" />
             </div>
           </div>
 
           <!-- รหัสผ่าน -->
           <div class="space-y-1.5">
-            <label class="block text-sm font-semibold text-slate-600 mb-1.5">รหัสผ่าน</label>
+            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1.5">รหัสผ่าน</label>
             <div class="relative">
-              <LockClosedIcon class="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <LockClosedIcon class="w-5 h-5 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="อย่างน้อย 6 ตัวอักษร" required
-                class="w-full pl-11 pr-11 py-3.5 bg-slate-50 border border-slate-300 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white outline-none transition-all text-sm sm:text-base" />
+                class="w-full pl-11 pr-11 py-3.5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-600 outline-none transition-all text-sm sm:text-base text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-400" />
               <button type="button" @click="showPassword = !showPassword"
-                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition">
+                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition">
                 <EyeSlashIcon v-if="showPassword" class="w-5 h-5" />
                 <EyeIcon v-else class="w-5 h-5" />
               </button>
@@ -68,13 +78,13 @@
 
           <!-- ยืนยันรหัสผ่าน -->
           <div class="space-y-1.5">
-            <label class="block text-sm font-semibold text-slate-600 mb-1.5">ยืนยันรหัสผ่าน</label>
+            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1.5">ยืนยันรหัสผ่าน</label>
             <div class="relative">
               <LockClosedIcon class="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2"
                 :class="confirmPassword && password !== confirmPassword ? 'text-red-400' : 'text-slate-400'" />
               <input v-model="confirmPassword" :type="showPassword ? 'text' : 'password'" placeholder="กรอกรหัสผ่านอีกครั้ง" required
                 :class="confirmPassword && password !== confirmPassword ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-emerald-500 focus:ring-emerald-500/20'"
-                class="w-full pl-11 pr-4 py-3.5 bg-slate-50 rounded-2xl focus:ring-2 focus:bg-white outline-none transition-all text-sm sm:text-base border" />
+                class="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-700 rounded-2xl focus:ring-2 focus:bg-white dark:focus:bg-slate-600 outline-none transition-all text-sm sm:text-base border text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-400 dark:border-slate-600" />
             </div>
             <p v-if="confirmPassword && password !== confirmPassword" class="text-xs text-red-500 mt-1 pl-1">รหัสผ่านไม่ตรงกัน</p>
           </div>
@@ -82,15 +92,15 @@
           <!-- บทบาท + รหัสสมัคร -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="space-y-1.5 z-20">
-              <label class="block text-sm font-semibold text-slate-600 mb-1.5">บทบาท (Role)</label>
+              <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1.5">บทบาท (Role)</label>
               <AppSelect v-model="role" :options="roleOptions" placeholder="เลือกบทบาท" :icon="ShieldCheckIcon" />
             </div>
             <div class="space-y-1.5">
-              <label class="block text-sm font-semibold text-slate-600 mb-1.5">รหัสสมัครสมาชิก</label>
+              <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1.5">รหัสสมัครสมาชิก</label>
               <div class="relative">
-                <KeyIcon class="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <KeyIcon class="w-5 h-5 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input v-model="regCode" type="password" placeholder="รหัสลับจาก ENV" required
-                  class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-300 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white outline-none transition-all text-sm sm:text-base" />
+                  class="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-600 outline-none transition-all text-sm sm:text-base text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-400" />
               </div>
             </div>
           </div>
@@ -108,11 +118,11 @@
         </form>
 
         <div class="relative my-7">
-          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
-          <div class="relative flex justify-center"><span class="bg-white px-4 text-xs text-slate-400">หรือ</span></div>
+          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200 dark:border-slate-700"></div></div>
+          <div class="relative flex justify-center"><span class="bg-white dark:bg-slate-800 px-4 text-xs text-slate-400 dark:text-slate-500">หรือ</span></div>
         </div>
 
-        <p class="text-center text-sm text-slate-500">
+        <p class="text-center text-sm text-slate-500 dark:text-slate-400">
           มีบัญชีแล้ว?
           <router-link to="/login" class="text-blue-600 font-semibold hover:text-blue-700 transition">เข้าสู่ระบบ</router-link>
         </p>
@@ -128,6 +138,7 @@ import { UserIcon, PhoneIcon, LockClosedIcon, ExclamationCircleIcon, CheckCircle
 import AppSelect from '../components/AppSelect.vue'
 import api from '../stores/api'
 
+const displayName = ref('')
 const username = ref('')
 const phone = ref('')
 const password = ref('')
@@ -159,6 +170,7 @@ async function register() {
   loading.value = true
   try {
     await api.post('/auth/register', {
+      displayName: displayName.value.trim(),
       username: username.value.trim(),
       phone: phone.value.trim(),
       password: password.value,

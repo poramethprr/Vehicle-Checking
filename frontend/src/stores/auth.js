@@ -9,6 +9,7 @@ export const auth = reactive({
     this.user = user
     localStorage.setItem('token', token)
     localStorage.setItem('user', JSON.stringify(user))
+    sessionStorage.removeItem('vehicle_alert_hidden')
   },
 
   setUser(user) {

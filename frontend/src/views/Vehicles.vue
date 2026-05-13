@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="relative bg-linear-to-r from-blue-600 to-cyan-600 rounded-2xl px-6 py-5 mb-6 overflow-hidden shadow-md shadow-blue-200">
+    <div class="relative bg-linear-to-r from-blue-600 to-cyan-600 dark:from-blue-950 dark:to-cyan-950 rounded-2xl px-6 py-5 mb-6 overflow-hidden shadow-md shadow-blue-200 dark:shadow-black/20">
       <div class="absolute -top-6 -right-6 w-28 h-28 bg-white/10 rounded-full pointer-events-none"></div>
       <div class="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div class="flex items-center gap-3">
@@ -12,36 +12,36 @@
             <p class="text-blue-200 text-xs mt-0.5">ข้อมูลยานพาหนะ, พ.ร.บ., ประกัน</p>
           </div>
         </div>
-        <div class="flex gap-2 self-start sm:self-auto">
-        <button @click="openForm(null)"
-          class="bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold px-5 py-2.5 rounded-xl transition-all text-sm shadow-lg shadow-emerald-300 hover:shadow-xl hover:shadow-emerald-300 hover:-translate-y-0.5 active:scale-[0.97] flex items-center gap-2 ring-2 ring-emerald-400/40">
-          <PlusCircleIcon class="w-4.5 h-4.5" /> เพิ่มยานพาหนะ
-        </button>
-        <button @click="exportVehicles"
-          class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2.5 rounded-xl transition-all text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-1.5">
-          <ArrowDownTrayIcon class="w-4 h-4" /> Export
-        </button>
-        <label
-          class="bg-slate-500 hover:bg-slate-600 text-white font-semibold px-4 py-2.5 rounded-xl transition-all text-sm shadow-sm hover:shadow-md active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
-          <ArrowUpTrayIcon class="w-4 h-4" /> Import
-          <input type="file" accept=".xlsx,.xls" @change="importVehicles" class="hidden" />
-        </label>
-        <button @click="printAllQR"
-          class="bg-violet-500 hover:bg-violet-600 text-white font-semibold px-4 py-2.5 rounded-xl transition-all text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-1.5">
-          <QrCodeIcon class="w-4 h-4" /> QR ทั้งหมด
-        </button>
+        <div class="flex flex-wrap gap-2 self-start sm:self-auto">
+          <button @click="openForm(null)"
+            class="bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 dark:from-emerald-700 dark:to-teal-800 dark:hover:from-emerald-800 dark:hover:to-teal-900 text-white font-bold px-4 py-2.5 rounded-xl transition-all text-sm shadow-lg shadow-emerald-300 dark:shadow-black/30 hover:-translate-y-0.5 active:scale-[0.97] flex items-center gap-1.5 ring-2 ring-emerald-400/40 dark:ring-white/10">
+            <PlusCircleIcon class="w-4 h-4 shrink-0" /> <span>เพิ่มยานพาหนะ</span>
+          </button>
+          <button @click="exportVehicles"
+            class="bg-blue-500 hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-800 text-white font-semibold px-3 py-2.5 rounded-xl transition-all text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-1.5">
+            <ArrowDownTrayIcon class="w-4 h-4 shrink-0" /> <span class="hidden sm:inline">Export</span>
+          </button>
+          <label
+            class="bg-slate-500 hover:bg-slate-600 text-white font-semibold px-3 py-2.5 rounded-xl transition-all text-sm shadow-sm hover:shadow-md active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
+            <ArrowUpTrayIcon class="w-4 h-4 shrink-0" /> <span class="hidden sm:inline">Import</span>
+            <input type="file" accept=".xlsx,.xls" @change="importVehicles" class="hidden" />
+          </label>
+          <button @click="printAllQR"
+            class="bg-violet-500 hover:bg-violet-600 dark:bg-violet-700 dark:hover:bg-violet-800 text-white font-semibold px-3 py-2.5 rounded-xl transition-all text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-1.5">
+            <QrCodeIcon class="w-4 h-4 shrink-0" /> <span class="hidden sm:inline">QR ทั้งหมด</span>
+          </button>
         </div>
       </div>
     </div>
 
     <!-- Search & Filter -->
-    <div class="bg-linear-to-br from-white to-blue-50/40 rounded-2xl shadow-lg shadow-blue-200/40 border border-blue-200 p-4 sm:p-5 mb-5 overflow-visible">
+    <div class="bg-linear-to-br from-white to-blue-50/40 dark:from-slate-800 dark:to-slate-800 rounded-2xl shadow-lg shadow-blue-200/40 border border-blue-200 dark:border-slate-700 p-4 sm:p-5 mb-5 overflow-visible">
       <div class="flex flex-col sm:flex-row gap-3">
         <div class="relative flex-1">
           <MagnifyingGlassIcon
             class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input v-model="searchQuery" placeholder="ค้นหาทะเบียน, ประเภท, เลขตัวถัง, เลขเครื่อง..."
-            class="w-full pl-9 pr-8 py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm shadow-sm transition hover:border-blue-400" />
+            class="w-full pl-9 pr-8 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm shadow-sm transition hover:border-blue-400 dark:text-white dark:placeholder-slate-400" />
           <button v-if="searchQuery" @click="searchQuery = ''"
             class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
             <XCircleIcon class="w-4 h-4" />
@@ -59,48 +59,63 @@
     </div>
 
     <!-- Vehicle List -->
-    <div class="bg-white rounded-2xl shadow-xl shadow-slate-500/25 border border-gray-200 overflow-visible">
-      <div class="px-5 sm:px-6 py-4 border-b border-gray-200">
-        <h3 class="font-bold text-slate-800 flex items-center gap-2">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-500/25 dark:shadow-black/30 border border-gray-200 dark:border-slate-700 overflow-visible">
+      <div class="px-5 sm:px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+        <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
           <TruckIcon class="w-5 h-5 text-blue-500" /> รายการยานพาหนะ
-          <span class="text-sm font-normal text-slate-400">{{ filteredVehicles.length }}/{{ vehicles.length }}</span>
+          <span class="text-sm font-normal text-slate-400 dark:text-slate-500">{{ filteredVehicles.length }}/{{ vehicles.length }}</span>
         </h3>
       </div>
 
       <!-- Mobile: Cards -->
-      <div class="sm:hidden divide-y divide-gray-100" v-if="paginatedVehicles.length">
+      <div class="sm:hidden divide-y divide-gray-100 dark:divide-slate-700" v-if="paginatedVehicles.length">
         <div v-for="v in paginatedVehicles" :key="v.id" class="px-4 py-3.5">
           <div class="flex items-center gap-3 mb-2">
-            <div :class="statusColor(v.status)" class="w-10 h-10 rounded-xl flex items-center justify-center">
-              <TruckIcon class="w-5 h-5" />
+            <div class="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-700/50">
+              <img v-if="v.photo" :src="`${BASE_URL}/uploads/${v.photo}`" class="w-full h-full object-cover" />
+              <div v-else :class="statusColor(v.status)" class="w-full h-full flex items-center justify-center">
+                <TruckIcon class="w-5 h-5" />
+              </div>
             </div>
             <div class="flex-1 min-w-0">
-              <div class="font-semibold text-sm text-slate-800">{{ v.licensePlate }}</div>
-              <div class="text-xs text-slate-400">{{ v.type }} · {{ statusLabel(v.status) }}</div>
+              <div class="font-semibold text-sm text-slate-800 dark:text-white">{{ v.licensePlate }}</div>
+              <div class="text-xs text-slate-400 dark:text-slate-500">{{ v.type }} · {{ statusLabel(v.status) }}</div>
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-500 mb-3 pl-13">
-            <div v-if="v.chassisNumber"><span class="text-slate-400">ตัวถัง:</span> {{ v.chassisNumber }}</div>
-            <div v-if="v.engineNumber"><span class="text-slate-400">เครื่อง:</span> {{ v.engineNumber }}</div>
-            <div v-if="v.currentMileage"><span class="text-slate-400">ไมล์:</span> {{ num(v.currentMileage) }}</div>
-            <div v-if="v.taxRenewalDate"><span class="text-slate-400">ต่อภาษี:</span> {{ fmtDate(v.taxRenewalDate) }}
+          <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400 mb-3 pl-13">
+            <div v-if="v.chassisNumber"><span class="text-slate-400 dark:text-slate-500">ตัวถัง:</span> {{ v.chassisNumber }}</div>
+            <div v-if="v.engineNumber"><span class="text-slate-400 dark:text-slate-500">เครื่อง:</span> {{ v.engineNumber }}</div>
+            <div v-if="v.registrationBookNumber"><span class="text-slate-400 dark:text-slate-500">เล่มทะเบียน:</span> {{ v.registrationBookNumber }}</div>
+            <div v-if="v.currentMileage"><span class="text-slate-400 dark:text-slate-500">ไมล์:</span> {{ num(v.currentMileage) }}</div>
+            <div v-if="v.taxRenewalDate"><span class="text-slate-400 dark:text-slate-500">ต่อภาษี:</span> {{ fmtDate(v.taxRenewalDate) }}
             </div>
+          </div>
+          <div class="flex gap-1.5 mb-3">
+            <span :class="expiryChip(v.prbExpiry)" class="flex-1 text-center text-[10px] font-semibold px-1.5 py-1.5 rounded-lg">
+              {{ expiryShortLabel(v.prbExpiry, 'พ.ร.บ.') }}
+            </span>
+            <span :class="expiryChip(v.taxRenewalDate)" class="flex-1 text-center text-[10px] font-semibold px-1.5 py-1.5 rounded-lg">
+              {{ expiryShortLabel(v.taxRenewalDate, 'ภาษี') }}
+            </span>
+            <span :class="expiryChip(v.insExpiry)" class="flex-1 text-center text-[10px] font-semibold px-1.5 py-1.5 rounded-lg">
+              {{ expiryShortLabel(v.insExpiry, 'ประกัน') }}
+            </span>
           </div>
           <div class="flex gap-2">
             <button @click="openForm(v)"
-              class="flex-1 flex items-center justify-center gap-1 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold py-2 rounded-xl transition ring-1 ring-amber-200">
+              class="flex-1 flex items-center justify-center gap-1 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-semibold py-2 rounded-xl transition ring-1 ring-amber-200 dark:ring-amber-800/50">
               <PencilSquareIcon class="w-3.5 h-3.5" /> แก้ไข
             </button>
             <button @click="openDetail(v)"
-              class="flex-1 flex items-center justify-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold py-2 rounded-xl transition ring-1 ring-blue-200">
+              class="flex-1 flex items-center justify-center gap-1 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-semibold py-2 rounded-xl transition ring-1 ring-blue-200 dark:ring-blue-800/50">
               <EyeIcon class="w-3.5 h-3.5" /> ดูข้อมูล
             </button>
             <button @click="openQr(v)"
-              class="flex items-center justify-center gap-1 bg-violet-50 hover:bg-violet-100 text-violet-600 text-xs font-semibold py-2 px-3 rounded-xl transition ring-1 ring-violet-200">
+              class="flex items-center justify-center gap-1 bg-violet-50 dark:bg-violet-900/20 hover:bg-violet-100 dark:hover:bg-violet-900/30 text-violet-600 dark:text-violet-400 text-xs font-semibold py-2 px-3 rounded-xl transition ring-1 ring-violet-200 dark:ring-violet-800/50">
               <QrCodeIcon class="w-3.5 h-3.5" />
             </button>
             <button @click="confirmDelete(v)"
-              class="flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold py-2 px-3 rounded-xl transition ring-1 ring-red-200">
+              class="flex items-center justify-center gap-1 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold py-2 px-3 rounded-xl transition ring-1 ring-red-200 dark:ring-red-800/50">
               <TrashIcon class="w-3.5 h-3.5" />
             </button>
           </div>
@@ -111,57 +126,198 @@
       <div class="hidden sm:block overflow-x-auto" v-if="paginatedVehicles.length">
         <table class="w-full">
           <thead>
-            <tr class="bg-slate-50/50">
-              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase">ยานพาหนะ</th>
-              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase">ทะเบียน</th>
-              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase">เลขตัวถัง</th>
-              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase">เลขเครื่อง</th>
-              <th class="text-right py-3 px-4 text-xs font-semibold text-slate-400 uppercase">ไมล์ปัจจุบัน</th>
-              <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 uppercase">สถานะ</th>
-              <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 uppercase">ต่อภาษี</th>
-              <th class="text-right py-3 px-4 text-xs font-semibold text-slate-400 uppercase">จัดการ</th>
+            <tr class="bg-slate-50/50 dark:bg-slate-700/30">
+              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase w-8"></th>
+              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">ยานพาหนะ</th>
+              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">ทะเบียน</th>
+              <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">สถานะ</th>
+              <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">พ.ร.บ. / ภาษี / ประกัน</th>
+              <th class="text-right py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">จัดการ</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100">
-            <tr v-for="v in paginatedVehicles" :key="v.id" class="hover:bg-slate-50/50 transition">
-              <td class="py-3 px-4">
-                <div class="flex items-center gap-2">
-                  <div :class="statusColor(v.status)" class="w-8 h-8 rounded-lg flex items-center justify-center">
-                    <TruckIcon class="w-4 h-4" />
+          <tbody>
+            <template v-for="v in paginatedVehicles" :key="v.id">
+              <!-- Main row -->
+              <tr class="border-t border-gray-100 dark:border-slate-700/50 hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition cursor-pointer"
+                  @click="expandedId = expandedId === v.id ? null : v.id">
+                <!-- Chevron -->
+                <td class="py-3 pl-4 pr-1 w-8">
+                  <ChevronDownIcon class="w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-200"
+                    :class="expandedId === v.id ? 'rotate-180 text-blue-500' : ''" />
+                </td>
+                <!-- ยานพาหนะ -->
+                <td class="py-3 px-4">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-700/50">
+                      <img v-if="v.photo" :src="`${BASE_URL}/uploads/${v.photo}`" class="w-full h-full object-cover" />
+                      <div v-else :class="statusColor(v.status)" class="w-full h-full flex items-center justify-center">
+                        <TruckIcon class="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div>
+                      <div class="text-sm font-semibold text-slate-800 dark:text-white">{{ v.type }}</div>
+                      <div v-if="v.currentMileage" class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">ไมล์: {{ num(v.currentMileage) }} กม.</div>
+                    </div>
                   </div>
-                  <span class="text-sm font-medium text-slate-800">{{ v.type }}</span>
-                </div>
-              </td>
-              <td class="py-3 px-4 text-sm font-semibold text-slate-700">{{ v.licensePlate }}</td>
-              <td class="py-3 px-4 text-xs text-slate-500">{{ v.chassisNumber || '-' }}</td>
-              <td class="py-3 px-4 text-xs text-slate-500">{{ v.engineNumber || '-' }}</td>
-              <td class="py-3 px-4 text-sm text-right text-slate-600">{{ v.currentMileage ? num(v.currentMileage) : '-'
-                }}</td>
-              <td class="py-3 px-4 text-center">
-                <span :class="statusBadge(v.status)" class="text-xs font-semibold px-2 py-0.5 rounded-full">{{
-                  statusLabel(v.status) }}</span>
-              </td>
-              <td class="py-3 px-4 text-center text-xs text-slate-500">{{ v.taxRenewalDate ? fmtDate(v.taxRenewalDate) :
-                '-' }}</td>
-              <td class="py-3 px-4 text-right whitespace-nowrap">
-                <button @click="openDetail(v)"
-                  class="text-blue-600 hover:bg-blue-50 text-xs font-semibold px-2 py-1.5 rounded-lg transition inline-flex items-center gap-1">
-                  <EyeIcon class="w-3.5 h-3.5" />
-                </button>
-                <button @click="openForm(v)"
-                  class="text-amber-600 hover:bg-amber-50 text-xs font-semibold px-2 py-1.5 rounded-lg transition inline-flex items-center gap-1">
-                  <PencilSquareIcon class="w-3.5 h-3.5" />
-                </button>
-                <button @click="openQr(v)"
-                  class="text-violet-600 hover:bg-violet-50 text-xs font-semibold px-2 py-1.5 rounded-lg transition inline-flex items-center gap-1">
-                  <QrCodeIcon class="w-3.5 h-3.5" />
-                </button>
-                <button @click="confirmDelete(v)"
-                  class="text-red-600 hover:bg-red-50 text-xs font-semibold px-2 py-1.5 rounded-lg transition inline-flex items-center gap-1">
-                  <TrashIcon class="w-3.5 h-3.5" />
-                </button>
-              </td>
-            </tr>
+                </td>
+                <!-- ทะเบียน -->
+                <td class="py-3 px-4">
+                  <div class="text-sm font-bold text-slate-700 dark:text-slate-200 tracking-wide">{{ v.licensePlate }}</div>
+                  <div v-if="v.registrationBookNumber" class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">เล่มทะเบียน: {{ v.registrationBookNumber }}</div>
+                </td>
+                <!-- สถานะ -->
+                <td class="py-3 px-4 text-center">
+                  <span :class="statusBadge(v.status)" class="text-xs font-semibold px-2.5 py-1 rounded-full">{{ statusLabel(v.status) }}</span>
+                </td>
+                <!-- เอกสาร chips -->
+                <td class="py-3 px-4 text-center">
+                  <div class="flex items-center justify-center gap-1.5">
+                    <span :class="expiryChip(v.prbExpiry)" class="text-[10px] font-semibold px-2 py-1 rounded-lg whitespace-nowrap">
+                      {{ expiryShortLabel(v.prbExpiry, 'พ.ร.บ.') }}
+                    </span>
+                    <span :class="expiryChip(v.taxRenewalDate)" class="text-[10px] font-semibold px-2 py-1 rounded-lg whitespace-nowrap">
+                      {{ expiryShortLabel(v.taxRenewalDate, 'ภาษี') }}
+                    </span>
+                    <span :class="expiryChip(v.insExpiry)" class="text-[10px] font-semibold px-2 py-1 rounded-lg whitespace-nowrap">
+                      {{ expiryShortLabel(v.insExpiry, 'ประกัน') }}
+                    </span>
+                  </div>
+                </td>
+                <!-- Actions -->
+                <td class="py-3 px-4 text-right whitespace-nowrap" @click.stop>
+                  <button @click="openForm(v)"
+                    class="text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 text-xs font-semibold px-2 py-1.5 rounded-lg transition inline-flex items-center gap-1">
+                    <PencilSquareIcon class="w-3.5 h-3.5" />
+                  </button>
+                  <button @click="openQr(v)"
+                    class="text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 text-xs font-semibold px-2 py-1.5 rounded-lg transition inline-flex items-center gap-1">
+                    <QrCodeIcon class="w-3.5 h-3.5" />
+                  </button>
+                  <button @click="confirmDelete(v)"
+                    class="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs font-semibold px-2 py-1.5 rounded-lg transition inline-flex items-center gap-1">
+                    <TrashIcon class="w-3.5 h-3.5" />
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Expanded detail panel -->
+              <tr v-if="expandedId === v.id" class="border-t border-blue-100 dark:border-slate-700">
+                <td colspan="6" class="px-0 py-0">
+                  <div class="bg-linear-to-br from-blue-50/60 to-slate-50/40 dark:from-slate-700/40 dark:to-slate-700/20 px-6 py-4 border-b border-blue-100 dark:border-slate-700">
+                    <div class="grid grid-cols-3 gap-4">
+
+                      <!-- Col 1: ข้อมูลพื้นฐาน -->
+                      <div class="space-y-3">
+                        <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">ข้อมูลรถ</p>
+                        <div class="space-y-1.5 text-xs">
+                          <div class="flex items-baseline gap-2">
+                            <span class="text-slate-400 dark:text-slate-500 shrink-0 w-24">เลขตัวถัง</span>
+                            <span class="font-medium text-slate-700 dark:text-slate-200">{{ v.chassisNumber || '-' }}</span>
+                          </div>
+                          <div class="flex items-baseline gap-2">
+                            <span class="text-slate-400 dark:text-slate-500 shrink-0 w-24">เลขเครื่องยนต์</span>
+                            <span class="font-medium text-slate-700 dark:text-slate-200">{{ v.engineNumber || '-' }}</span>
+                          </div>
+                          <div class="flex items-baseline gap-2">
+                            <span class="text-slate-400 dark:text-slate-500 shrink-0 w-24">เล่มทะเบียน</span>
+                            <span class="font-medium text-slate-700 dark:text-slate-200">{{ v.registrationBookNumber || '-' }}</span>
+                          </div>
+                          <div class="flex items-baseline gap-2">
+                            <span class="text-slate-400 dark:text-slate-500 shrink-0 w-24">ไมล์ปัจจุบัน</span>
+                            <span class="font-medium text-slate-700 dark:text-slate-200">{{ v.currentMileage ? num(v.currentMileage) + ' กม.' : '-' }}</span>
+                          </div>
+                          <div class="flex items-baseline gap-2">
+                            <span class="text-slate-400 dark:text-slate-500 shrink-0 w-24">ไมล์ถัดไป</span>
+                            <span class="font-medium text-slate-700 dark:text-slate-200">{{ v.nextMileage ? num(v.nextMileage) + ' กม.' : '-' }}</span>
+                          </div>
+                          <div v-if="v.note" class="mt-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 rounded-lg px-2.5 py-1.5 text-amber-800 dark:text-amber-300">
+                            <span class="font-semibold">หมายเหตุ:</span> {{ v.note }}
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Col 2: พ.ร.บ. -->
+                      <div class="space-y-3">
+                        <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">พ.ร.บ.</p>
+                        <div class="space-y-1.5 text-xs">
+                          <div class="flex items-center gap-2">
+                            <span :class="expiryChip(v.prbExpiry)" class="text-[10px] font-bold px-2 py-0.5 rounded-md">{{ expiryShortLabel(v.prbExpiry, 'พ.ร.บ.') }}</span>
+                            <span class="text-slate-500 dark:text-slate-400">{{ v.prbExpiry ? fmtDate(v.prbExpiry) : 'ไม่ระบุ' }}</span>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <span :class="expiryChip(v.taxRenewalDate)" class="text-[10px] font-bold px-2 py-0.5 rounded-md">{{ expiryShortLabel(v.taxRenewalDate, 'ภาษี') }}</span>
+                            <span class="text-slate-500 dark:text-slate-400">{{ v.taxRenewalDate ? fmtDate(v.taxRenewalDate) : 'ไม่ระบุ' }}</span>
+                          </div>
+                          <div v-if="v.prbContact" class="flex items-center gap-1.5 text-blue-600 font-medium">
+                            <PhoneIcon class="w-3 h-3 shrink-0" />
+                            <a :href="`tel:${v.prbContact}`" class="hover:underline" @click.stop>{{ v.prbContact }}</a>
+                          </div>
+                          <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 grid grid-cols-2 gap-x-4 gap-y-1">
+                            <span :class="v.prbLmg ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
+                              <span>{{ v.prbLmg ? '✓' : '✗' }}</span> LMG
+                            </span>
+                            <span :class="v.prbViriya ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
+                              <span>{{ v.prbViriya ? '✓' : '✗' }}</span> วิริยะ
+                            </span>
+                            <span :class="v.prbAkney ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
+                              <span>{{ v.prbAkney ? '✓' : '✗' }}</span> อาคเนย์
+                            </span>
+                            <span :class="v.prbThewet ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
+                              <span>{{ v.prbThewet ? '✓' : '✗' }}</span> เทเวศ
+                            </span>
+                            <span :class="v.prbInsurance ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
+                              <span>{{ v.prbInsurance ? '✓' : '✗' }}</span> คุ้มภัย
+                            </span>
+                            <span :class="v.prbBangkokInsurance ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
+                              <span>{{ v.prbBangkokInsurance ? '✓' : '✗' }}</span> กรุงเทพ
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Col 3: ประกัน -->
+                      <div class="space-y-3">
+                        <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">รอบต่อประกัน</p>
+                        <div class="space-y-1.5 text-xs">
+                          <div class="flex items-center gap-2">
+                            <span :class="expiryChip(v.insExpiry)" class="text-[10px] font-bold px-2 py-0.5 rounded-md">{{ expiryShortLabel(v.insExpiry, 'ประกัน') }}</span>
+                            <span class="text-slate-500 dark:text-slate-400">{{ v.insExpiry ? fmtDate(v.insExpiry) : 'ไม่ระบุ' }}</span>
+                          </div>
+                          <div v-if="v.insContact" class="flex items-center gap-1.5 text-blue-600 font-medium">
+                            <PhoneIcon class="w-3 h-3 shrink-0" />
+                            <a :href="`tel:${v.insContact}`" class="hover:underline" @click.stop>{{ v.insContact }}</a>
+                          </div>
+                          <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 grid grid-cols-2 gap-x-4 gap-y-1">
+                            <span :class="v.insLmg ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
+                              <span>{{ v.insLmg ? '✓' : '✗' }}</span> LMG
+                            </span>
+                            <span :class="v.insViriya ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
+                              <span>{{ v.insViriya ? '✓' : '✗' }}</span> วิริยะ
+                            </span>
+                            <span :class="v.insThaiInsurance ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
+                              <span>{{ v.insThaiInsurance ? '✓' : '✗' }}</span> ไทยประกัน
+                            </span>
+                            <span :class="v.insInsurance ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
+                              <span>{{ v.insInsurance ? '✓' : '✗' }}</span> คุ้มภัย
+                            </span>
+                            <span :class="v.insAkney ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
+                              <span>{{ v.insAkney ? '✓' : '✗' }}</span> อาคเนย์
+                            </span>
+                            <span :class="v.insThewet ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
+                              <span>{{ v.insThewet ? '✓' : '✗' }}</span> เทเวศ
+                            </span>
+                            <span :class="v.insBangkokInsurance ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
+                              <span>{{ v.insBangkokInsurance ? '✓' : '✗' }}</span> กรุงเทพ
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </template>
           </tbody>
         </table>
       </div>
@@ -172,24 +328,24 @@
         subtitle="กดปุ่ม 'เพิ่มยานพาหนะ' เพื่อเริ่มต้น" />
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="flex items-center justify-between px-5 py-3 border-t border-gray-200">
-        <span class="text-xs text-slate-400">
+      <div v-if="totalPages > 1" class="flex items-center justify-between px-5 py-3 border-t border-gray-200 dark:border-slate-700">
+        <span class="text-xs text-slate-400 dark:text-slate-500">
           แสดง {{ (currentPage - 1) * pageSize + 1 }}–{{ Math.min(currentPage * pageSize, filteredVehicles.length) }}
           จาก {{ filteredVehicles.length }} รายการ
         </span>
         <div class="flex items-center gap-1">
           <button @click="currentPage--" :disabled="currentPage === 1"
-            class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition text-sm font-medium">
+            class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition text-sm font-medium">
             ‹
           </button>
           <template v-for="p in totalPages" :key="p">
             <button @click="currentPage = p"
-              :class="[p === currentPage ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100', 'w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition']">
+              :class="[p === currentPage ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700', 'w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition']">
               {{ p }}
             </button>
           </template>
           <button @click="currentPage++" :disabled="currentPage === totalPages"
-            class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition text-sm font-medium">
+            class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition text-sm font-medium">
             ›
           </button>
         </div>
@@ -199,33 +355,37 @@
     <!-- Detail Modal -->
     <TransitionRoot :show="!!detailVehicle" as="template">
       <Dialog @close="detailVehicle = null" class="relative z-50">
-        <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
-          leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-          <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+        <TransitionChild as="template" enter="ease-out duration-200" enter-from="opacity-0" enter-to="opacity-100"
+          leave="ease-in duration-150" leave-from="opacity-100" leave-to="opacity-0">
+          <div class="fixed inset-0 bg-black/40" />
         </TransitionChild>
         <div class="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <TransitionChild as="template" enter="ease-out duration-300"
+          <TransitionChild as="template" enter="ease-out duration-200"
             enter-from="opacity-0 translate-y-full sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100"
-            leave="ease-in duration-200" leave-from="opacity-100 sm:scale-100"
+            leave="ease-in duration-150" leave-from="opacity-100 sm:scale-100"
             leave-to="opacity-0 translate-y-full sm:scale-95">
             <DialogPanel
-              class="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto">
+              class="bg-white dark:bg-slate-800 rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto">
               <div
-                class="sticky top-0 bg-white border-b px-5 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl">
-                <DialogTitle class="font-bold text-slate-800">ข้อมูลยานพาหนะ</DialogTitle>
-                <button @click="detailVehicle = null" class="p-1 hover:bg-slate-100 rounded-lg">
-                  <XMarkIcon class="w-5 h-5 text-slate-400" />
+                class="sticky top-0 bg-white dark:bg-slate-800 border-b dark:border-slate-700 px-5 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl">
+                <DialogTitle class="font-bold text-slate-800 dark:text-white">ข้อมูลยานพาหนะ</DialogTitle>
+                <button @click="detailVehicle = null" class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+                  <XMarkIcon class="w-5 h-5 text-slate-400 dark:text-slate-500" />
                 </button>
               </div>
               <div class="p-5 space-y-4" v-if="detailVehicle">
+                <!-- รูปยานพาหนะ -->
+                <div v-if="detailVehicle.photo" class="rounded-xl overflow-hidden border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-700 max-h-48">
+                  <img :src="`${BASE_URL}/uploads/${detailVehicle.photo}`" class="w-full h-full object-cover" />
+                </div>
                 <div class="flex items-center gap-3 mb-2">
                   <div :class="statusColor(detailVehicle.status)"
-                    class="w-12 h-12 rounded-xl flex items-center justify-center">
+                    class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
                     <TruckIcon class="w-6 h-6" />
                   </div>
                   <div>
-                    <div class="font-bold text-lg text-slate-800">{{ detailVehicle.licensePlate }}</div>
-                    <div class="text-sm text-slate-400">{{ detailVehicle.type }}</div>
+                    <div class="font-bold text-lg text-slate-800 dark:text-white">{{ detailVehicle.licensePlate }}</div>
+                    <div class="text-sm text-slate-400 dark:text-slate-500">{{ detailVehicle.type }}</div>
                   </div>
                   <span :class="statusBadge(detailVehicle.status)"
                     class="ml-auto text-xs font-semibold px-3 py-1 rounded-full">{{ statusLabel(detailVehicle.status)
@@ -235,6 +395,7 @@
                 <div class="grid grid-cols-2 gap-3">
                   <InfoItem label="เลขตัวถัง" :value="detailVehicle.chassisNumber" />
                   <InfoItem label="เลขเครื่องยนต์" :value="detailVehicle.engineNumber" />
+                  <InfoItem label="เลขเล่มทะเบียนรถ" :value="detailVehicle.registrationBookNumber" />
                   <InfoItem label="ไมล์ปัจจุบัน"
                     :value="detailVehicle.currentMileage ? num(detailVehicle.currentMileage) : null" />
                   <InfoItem label="ไมล์ครั้งต่อไป"
@@ -246,12 +407,12 @@
                 </div>
 
                 <div v-if="detailVehicle.note"
-                  class="bg-amber-50 border border-amber-100 rounded-xl p-3 text-sm text-amber-800">
+                  class="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 rounded-xl p-3 text-sm text-amber-800 dark:text-amber-300">
                   <span class="font-semibold">หมายเหตุ:</span> {{ detailVehicle.note }}
                 </div>
 
-                <div class="border-t pt-4">
-                  <h4 class="font-semibold text-slate-700 text-sm mb-2">พ.ร.บ.</h4>
+                <div class="border-t dark:border-slate-700 pt-4">
+                  <h4 class="font-semibold text-slate-700 dark:text-slate-200 text-sm mb-2">พ.ร.บ.</h4>
                   <div class="grid grid-cols-2 gap-2 text-xs">
                     <BoolItem label="LMG" :val="detailVehicle.prbLmg" />
                     <BoolItem label="วิริยะ" :val="detailVehicle.prbViriya" />
@@ -262,11 +423,12 @@
                     <BoolItem label="ทำประกันภัย" :val="detailVehicle.prbThirdParty" />
                     <InfoItem label="วันหมดอายุ พ.ร.บ."
                       :value="detailVehicle.prbExpiry ? fmtDate(detailVehicle.prbExpiry) : null" />
+                    <InfoItem label="เบอร์ติดต่อ พ.ร.บ." :value="detailVehicle.prbContact" />
                   </div>
                 </div>
 
-                <div class="border-t pt-4">
-                  <h4 class="font-semibold text-slate-700 text-sm mb-2">รอบต่อประกัน</h4>
+                <div class="border-t dark:border-slate-700 pt-4">
+                  <h4 class="font-semibold text-slate-700 dark:text-slate-200 text-sm mb-2">รอบต่อประกัน</h4>
                   <div class="grid grid-cols-2 gap-2 text-xs">
                     <BoolItem label="LMG" :val="detailVehicle.insLmg" />
                     <BoolItem label="วิริยะ" :val="detailVehicle.insViriya" />
@@ -277,6 +439,7 @@
                     <BoolItem label="กรุงเทพประกันภัย" :val="detailVehicle.insBangkokInsurance" />
                     <InfoItem label="วันหมดอายุประกัน"
                       :value="detailVehicle.insExpiry ? fmtDate(detailVehicle.insExpiry) : null" />
+                    <InfoItem label="เบอร์ติดต่อประกัน" :value="detailVehicle.insContact" />
                   </div>
                 </div>
               </div>
@@ -291,44 +454,44 @@
       <Dialog @close="showQrModal = false" class="relative z-50">
         <TransitionChild as="template" enter="duration-200 ease-out" enter-from="opacity-0" enter-to="opacity-100"
           leave="duration-150 ease-in" leave-from="opacity-100" leave-to="opacity-0">
-          <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+          <div class="fixed inset-0 bg-black/40" />
         </TransitionChild>
         <div class="fixed inset-0 overflow-y-auto">
           <div class="flex min-h-full items-center justify-center p-4">
             <TransitionChild as="template" enter="duration-200 ease-out" enter-from="opacity-0 scale-95"
               enter-to="opacity-100 scale-100" leave="duration-150 ease-in" leave-from="opacity-100 scale-100"
               leave-to="opacity-0 scale-95">
-              <DialogPanel class="w-full max-w-xs bg-white rounded-2xl shadow-2xl overflow-hidden">
-                <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                  <DialogTitle class="font-bold text-slate-800 flex items-center gap-2">
+              <DialogPanel class="w-full max-w-xs bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
+                  <DialogTitle class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
                     <QrCodeIcon class="w-5 h-5 text-violet-500" /> QR Code ยานพาหนะ
                   </DialogTitle>
-                  <button @click="showQrModal = false" class="p-1.5 rounded-lg hover:bg-slate-100 transition text-slate-400">
+                  <button @click="showQrModal = false" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition text-slate-400 dark:text-slate-500">
                     <XMarkIcon class="w-5 h-5" />
                   </button>
                 </div>
                 <div class="p-5 flex flex-col items-center gap-4" v-if="qrVehicle">
                   <!-- QR Card (printable) -->
-                  <div id="qr-print-card" class="bg-white border-2 border-slate-200 rounded-2xl p-5 flex flex-col items-center gap-3 w-full">
+                  <div id="qr-print-card" class="bg-white dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 rounded-2xl p-5 flex flex-col items-center gap-3 w-full">
                     <img src="../assets/logo-icon.png" alt="logo" class="w-12 h-12 rounded-full object-cover" />
                     <div class="text-center">
-                      <div class="font-bold text-slate-800 text-xl tracking-wide">{{ qrVehicle.licensePlate }}</div>
-                      <div class="text-slate-400 text-sm mt-0.5">{{ qrVehicle.type }}</div>
+                      <div class="font-bold text-slate-800 dark:text-white text-xl tracking-wide">{{ qrVehicle.licensePlate }}</div>
+                      <div class="text-slate-400 dark:text-slate-400 text-sm mt-0.5">{{ qrVehicle.type }}</div>
                     </div>
                     <img v-if="qrDataUrl" :src="qrDataUrl" alt="QR Code" class="w-48 h-48 rounded-lg" />
-                    <div v-else class="w-48 h-48 flex items-center justify-center bg-slate-50 rounded-lg">
+                    <div v-else class="w-48 h-48 flex items-center justify-center bg-slate-50 dark:bg-slate-600 rounded-lg">
                       <svg class="animate-spin w-8 h-8 text-violet-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                     </div>
-                    <p class="text-xs text-slate-400 text-center">สแกนเพื่อบันทึกการตรวจเช็ค</p>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 text-center">สแกนเพื่อบันทึกการตรวจเช็ค</p>
                   </div>
                   <!-- Actions -->
                   <div class="flex gap-3 w-full">
                     <button @click="downloadQr"
-                      class="flex-1 flex items-center justify-center gap-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 font-semibold py-2.5 rounded-xl text-sm transition ring-1 ring-violet-200">
+                      class="flex-1 flex items-center justify-center gap-1.5 bg-violet-50 dark:bg-violet-900/20 hover:bg-violet-100 dark:hover:bg-violet-900/30 text-violet-700 dark:text-violet-400 font-semibold py-2.5 rounded-xl text-sm transition ring-1 ring-violet-200 dark:ring-violet-800/50">
                       <ArrowDownTrayIcon class="w-4 h-4" /> Download
                     </button>
                     <button @click="printQr"
-                      class="flex-1 flex items-center justify-center gap-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold py-2.5 rounded-xl text-sm transition ring-1 ring-slate-200">
+                      class="flex-1 flex items-center justify-center gap-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold py-2.5 rounded-xl text-sm transition ring-1 ring-slate-200 dark:ring-slate-600">
                       <PrinterIcon class="w-4 h-4" /> Print
                     </button>
                   </div>
@@ -343,55 +506,110 @@
     <!-- Add/Edit Modal -->
     <TransitionRoot :show="showFormModal" as="template">
       <Dialog @close="showFormModal = false" class="relative z-50">
-        <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
-          leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-          <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+        <TransitionChild as="template" enter="ease-out duration-200" enter-from="opacity-0" enter-to="opacity-100"
+          leave="ease-in duration-150" leave-from="opacity-100" leave-to="opacity-0">
+          <div class="fixed inset-0 bg-black/40" />
         </TransitionChild>
         <div class="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <TransitionChild as="template" enter="ease-out duration-300"
+          <TransitionChild as="template" enter="ease-out duration-200"
             enter-from="opacity-0 translate-y-full sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100"
-            leave="ease-in duration-200" leave-from="opacity-100 sm:scale-100"
+            leave="ease-in duration-150" leave-from="opacity-100 sm:scale-100"
             leave-to="opacity-0 translate-y-full sm:scale-95">
             <DialogPanel
-              class="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+              class="bg-white dark:bg-slate-800 rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto">
               <div
-                class="sticky top-0 bg-white border-b px-5 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl z-10">
-                <DialogTitle class="font-bold text-slate-800">{{ editingVehicle ? 'แก้ไขยานพาหนะ' : 'เพิ่มยานพาหนะใหม่'
+                class="sticky top-0 bg-white dark:bg-slate-800 border-b dark:border-slate-700 px-5 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl z-10">
+                <DialogTitle class="font-bold text-slate-800 dark:text-white">{{ editingVehicle ? 'แก้ไขยานพาหนะ' : 'เพิ่มยานพาหนะใหม่'
                   }}
                 </DialogTitle>
-                <button @click="showFormModal = false" class="p-1 hover:bg-slate-100 rounded-lg">
-                  <XMarkIcon class="w-5 h-5 text-slate-400" />
+                <button @click="showFormModal = false" class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+                  <XMarkIcon class="w-5 h-5 text-slate-400 dark:text-slate-500" />
                 </button>
               </div>
               <div class="p-5 space-y-5">
                 <!-- ข้อมูลทั่วไป -->
-                <fieldset class="bg-blue-50/40 rounded-2xl p-4">
-                  <legend class="text-sm font-bold text-blue-700 mb-3 flex items-center gap-1.5">
+                <fieldset class="bg-blue-50/40 dark:bg-blue-900/10 rounded-2xl p-4">
+                  <legend class="text-sm font-bold text-blue-700 dark:text-blue-400 mb-3 flex items-center gap-1.5">
                     <TruckIcon class="w-4 h-4 text-blue-500" /> ข้อมูลทั่วไป
                   </legend>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FormInput v-model="form.type" label="ประเภทรถ" placeholder="เช่น รถตู้" required />
-                    <FormInput v-model="form.licensePlate" label="ทะเบียน" placeholder="เช่น กข 1234" required />
+                    <!-- ทะเบียนรถ 3 ส่วน -->
+                    <div class="sm:col-span-2">
+                      <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">เลขทะเบียนรถ <span class="text-red-500">*</span></label>
+                      <div class="flex gap-2 items-center">
+                        <div class="flex-none w-28">
+                          <input v-model="form.lpPrefix" placeholder="ตัวอักษร เช่น กข"
+                            class="w-full px-3 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition hover:border-blue-400 text-center font-bold tracking-widest dark:text-white dark:placeholder-slate-400" />
+                          <div class="text-[10px] text-slate-400 dark:text-slate-500 text-center mt-0.5">ตัวอักษรนำหน้า</div>
+                        </div>
+                        <div class="text-slate-300 dark:text-slate-600 font-bold text-lg shrink-0">-</div>
+                        <div class="flex-none w-24">
+                          <input v-model="form.lpNumber" placeholder="เช่น 1234" maxlength="5"
+                            class="w-full px-3 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition hover:border-blue-400 text-center font-bold tracking-widest dark:text-white dark:placeholder-slate-400" />
+                          <div class="text-[10px] text-slate-400 dark:text-slate-500 text-center mt-0.5">หมายเลข</div>
+                        </div>
+                        <div class="text-slate-300 dark:text-slate-600 font-bold text-lg shrink-0">-</div>
+                        <div class="flex-1">
+                          <input v-model="form.lpProvince" list="province-list" placeholder="จังหวัด"
+                            class="w-full px-3 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition hover:border-blue-400 dark:text-white dark:placeholder-slate-400" />
+                          <datalist id="province-list">
+                            <option v-for="p in PROVINCES" :key="p" :value="p" />
+                          </datalist>
+                          <div class="text-[10px] text-slate-400 dark:text-slate-500 text-center mt-0.5">จังหวัด</div>
+                        </div>
+                      </div>
+                      <div v-if="form.lpPrefix || form.lpNumber || form.lpProvince" class="mt-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800/50 rounded-xl px-3 py-2 flex items-center gap-2">
+                        <span class="text-xs text-slate-400 dark:text-slate-500 shrink-0">ทะเบียนรถ:</span>
+                        <span class="text-sm font-bold text-blue-700 dark:text-blue-300 tracking-wide">{{ [form.lpPrefix, form.lpNumber, form.lpProvince].filter(Boolean).join(' ') }}</span>
+                      </div>
+                    </div>
+                    <FormInput v-model="form.registrationBookNumber" label="เลขเล่มทะเบียนรถ" placeholder="เลขเล่มทะเบียน" />
                     <FormInput v-model="form.chassisNumber" label="เลขตัวถัง" placeholder="VIN" />
                     <FormInput v-model="form.engineNumber" label="เลขเครื่องยนต์" />
                     <FormInput v-model="form.currentMileage" label="ไมล์ปัจจุบัน" type="number" />
                     <FormInput v-model="form.nextMileage" label="ไมล์ครั้งต่อไป" type="number" />
                     <FormInput v-model="form.overMileage" label="ระยะที่เกิน" type="number" />
                     <div>
-                      <label class="block text-xs font-semibold text-slate-500 mb-1">สถานะ</label>
+                      <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">สถานะ</label>
                       <AppSelect v-model="form.status" :options="vehicleStatusOptions" :allow-empty="false" />
                     </div>
                     <FormInput v-model="form.taxRenewalDate" label="รอบต่อภาษี" type="date" />
+
+                    <!-- รูปยานพาหนะ -->
                     <div class="sm:col-span-2">
-                      <label class="block text-xs font-semibold text-slate-500 mb-1">หมายเหตุ</label>
+                      <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">รูปยานพาหนะ</label>
+                      <div class="flex items-start gap-3">
+                        <div class="relative w-28 h-28 rounded-xl overflow-hidden border-2 border-dashed border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 shrink-0 flex items-center justify-center">
+                          <img v-if="photoPreview" :src="photoPreview" class="absolute inset-0 w-full h-full object-cover" />
+                          <div v-else class="flex flex-col items-center gap-1 text-slate-300">
+                            <PhotoIcon class="w-8 h-8" />
+                            <span class="text-[10px]">ไม่มีรูป</span>
+                          </div>
+                          <button v-if="photoPreview" type="button" @click="clearVehiclePhoto"
+                            class="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-0.5 shadow transition z-10">
+                            <XMarkIcon class="w-3 h-3" />
+                          </button>
+                        </div>
+                        <label class="flex-1 flex flex-col items-center justify-center gap-2 h-28 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-slate-600 cursor-pointer transition">
+                          <CameraIcon class="w-6 h-6 text-slate-300" />
+                          <span class="text-xs text-slate-400 dark:text-slate-500">คลิกเพื่อเลือกรูป</span>
+                          <span class="text-[10px] text-slate-300 dark:text-slate-500">jpg, png — ไม่เกิน 20 MB</span>
+                          <input type="file" accept="image/*" class="hidden" @change="onVehiclePhotoChange" />
+                        </label>
+                      </div>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                      <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">หมายเหตุ</label>
                       <AppEditor v-model="form.note" placeholder="หมายเหตุเพิ่มเติม..." height="120px" />
                     </div>
                   </div>
                 </fieldset>
 
                 <!-- พ.ร.บ. -->
-                <fieldset class="bg-amber-50/40 rounded-2xl p-4">
-                  <legend class="text-sm font-bold text-amber-700 mb-3 flex items-center gap-1.5">
+                <fieldset class="bg-amber-50/40 dark:bg-amber-900/10 rounded-2xl p-4">
+                  <legend class="text-sm font-bold text-amber-700 dark:text-amber-400 mb-3 flex items-center gap-1.5">
                     <DocumentTextIcon class="w-4 h-4 text-amber-500" /> พ.ร.บ.
                   </legend>
                   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -405,12 +623,13 @@
                   </div>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                     <FormInput v-model="form.prbExpiry" label="วันหมดอายุ พ.ร.บ." type="date" />
+                    <FormInput v-model="form.prbContact" label="เบอร์ติดต่อ พ.ร.บ." placeholder="เช่น 02-xxx-xxxx" />
                   </div>
                 </fieldset>
 
                 <!-- รอบต่อประกัน -->
-                <fieldset class="bg-emerald-50/40 rounded-2xl p-4">
-                  <legend class="text-sm font-bold text-emerald-700 mb-3 flex items-center gap-1.5">
+                <fieldset class="bg-emerald-50/40 dark:bg-emerald-900/10 rounded-2xl p-4">
+                  <legend class="text-sm font-bold text-emerald-700 dark:text-emerald-400 mb-3 flex items-center gap-1.5">
                     <ShieldCheckIcon class="w-4 h-4 text-emerald-500" /> รอบต่อประกัน
                   </legend>
                   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -424,13 +643,14 @@
                   </div>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                     <FormInput v-model="form.insExpiry" label="วันหมดอายุประกัน" type="date" />
+                    <FormInput v-model="form.insContact" label="เบอร์ติดต่อประกัน" placeholder="เช่น 02-xxx-xxxx" />
                   </div>
                 </fieldset>
 
                 <!-- Submit -->
-                <div class="border-t pt-4 flex justify-end gap-2">
+                <div class="border-t dark:border-slate-700 pt-4 flex justify-end gap-2">
                   <button @click="showFormModal = false"
-                    class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold rounded-xl text-sm transition">ยกเลิก</button>
+                    class="px-5 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-semibold rounded-xl text-sm transition">ยกเลิก</button>
                   <button @click="saveVehicle" :disabled="saving"
                     class="px-6 py-2.5 bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:from-slate-300 disabled:to-slate-300 text-white font-semibold rounded-xl text-sm transition shadow-sm active:scale-[0.98]">
                     {{ saving ? 'กำลังบันทึก...' : (editingVehicle ? 'อัพเดท' : 'เพิ่มยานพาหนะ') }}
@@ -451,7 +671,8 @@ import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } fro
 import {
   TruckIcon, PlusCircleIcon, PencilSquareIcon, TrashIcon, MagnifyingGlassIcon,
   XCircleIcon, XMarkIcon, EyeIcon, FunnelIcon, DocumentTextIcon, ShieldCheckIcon,
-  ArrowDownTrayIcon, ArrowUpTrayIcon, QrCodeIcon, PrinterIcon
+  ArrowDownTrayIcon, ArrowUpTrayIcon, QrCodeIcon, PrinterIcon, CameraIcon, PhotoIcon,
+  ChevronDownIcon, PhoneIcon
 } from '@heroicons/vue/24/outline'
 import QRCode from 'qrcode'
 import AppSelect from '../components/AppSelect.vue'
@@ -460,6 +681,7 @@ import AppEditor from '../components/AppEditor.vue'
 import api from '../stores/api'
 import { auth } from '../stores/auth'
 import { swalSuccess, swalError, swalConfirm } from '../stores/swal'
+import { fmtDateTh, toLocalDateStr } from '../stores/date'
 
 // --- Inline sub-components ---
 const FormInput = {
@@ -467,11 +689,11 @@ const FormInput = {
   emits: ['update:modelValue'],
   setup(p, { emit }) {
     return () => h('div', [
-      h('label', { class: 'block text-xs font-semibold text-slate-500 mb-1' }, p.label),
+      h('label', { class: 'block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1' }, p.label),
       h('input', {
         type: p.type || 'text', value: p.modelValue || '', placeholder: p.placeholder || '',
         required: p.required,
-        class: 'w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition hover:border-blue-400',
+        class: 'w-full px-3 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition hover:border-blue-400 dark:text-white dark:placeholder-slate-400',
         onInput: e => emit('update:modelValue', e.target.value)
       })
     ])
@@ -483,10 +705,10 @@ const FormCheck = {
   setup(p, { emit }) {
     return () => h('label', { class: 'flex items-center gap-2 cursor-pointer select-none' }, [
       h('input', {
-        type: 'checkbox', checked: p.modelValue, class: 'w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500',
+        type: 'checkbox', checked: p.modelValue, class: 'w-4 h-4 rounded border-slate-300 dark:border-slate-500 text-blue-600 focus:ring-blue-500 dark:bg-slate-700',
         onChange: e => emit('update:modelValue', e.target.checked)
       }),
-      h('span', { class: 'text-sm text-slate-700' }, p.label)
+      h('span', { class: 'text-sm text-slate-700 dark:text-slate-200' }, p.label)
     ])
   }
 }
@@ -494,9 +716,9 @@ const FormCheck = {
 const InfoItem = {
   props: ['label', 'value'],
   setup(p) {
-    return () => h('div', { class: 'bg-slate-50 rounded-lg px-3 py-2' }, [
-      h('div', { class: 'text-xs text-slate-400' }, p.label),
-      h('div', { class: 'text-sm font-medium text-slate-700' }, p.value || '-')
+    return () => h('div', { class: 'bg-slate-50 dark:bg-slate-700 rounded-lg px-3 py-2' }, [
+      h('div', { class: 'text-xs text-slate-400 dark:text-slate-500' }, p.label),
+      h('div', { class: 'text-sm font-medium text-slate-700 dark:text-slate-200' }, p.value || '-')
     ])
   }
 }
@@ -506,9 +728,62 @@ const BoolItem = {
   setup(p) {
     return () => h('div', { class: 'flex items-center gap-1.5' }, [
       h('span', { class: p.val ? 'text-emerald-500' : 'text-slate-300' }, p.val ? '✓' : '✗'),
-      h('span', { class: 'text-slate-600' }, p.label)
+      h('span', { class: 'text-slate-600 dark:text-slate-300' }, p.label)
     ])
   }
+}
+
+const BASE_URL = `http://${window.location.hostname}:8099`
+
+const PROVINCES = [
+  'กรุงเทพมหานคร','กระบี่','กาญจนบุรี','กาฬสินธุ์','กำแพงเพชร','ขอนแก่น','จันทบุรี','ฉะเชิงเทรา',
+  'ชลบุรี','ชัยนาท','ชัยภูมิ','ชุมพร','เชียงราย','เชียงใหม่','ตรัง','ตราด','ตาก','นครนายก',
+  'นครปฐม','นครพนม','นครราชสีมา','นครศรีธรรมราช','นครสวรรค์','นนทบุรี','นราธิวาส','น่าน',
+  'บึงกาฬ','บุรีรัมย์','ปทุมธานี','ประจวบคีรีขันธ์','ปราจีนบุรี','ปัตตานี','พระนครศรีอยุธยา',
+  'พะเยา','พังงา','พัทลุง','พิจิตร','พิษณุโลก','เพชรบุรี','เพชรบูรณ์','แพร่','ภูเก็ต',
+  'มหาสารคาม','มุกดาหาร','แม่ฮ่องสอน','ยโสธร','ยะลา','ร้อยเอ็ด','ระนอง','ระยอง',
+  'ราชบุรี','ลพบุรี','ลำปาง','ลำพูน','เลย','ศรีสะเกษ','สกลนคร','สงขลา','สตูล',
+  'สมุทรปราการ','สมุทรสงคราม','สมุทรสาคร','สระแก้ว','สระบุรี','สิงห์บุรี','สุโขทัย',
+  'สุพรรณบุรี','สุราษฎร์ธานี','สุรินทร์','หนองคาย','หนองบัวลำภู','อ่างทอง','อำนาจเจริญ',
+  'อุดรธานี','อุตรดิตถ์','อุทัยธานี','อุบลราชธานี'
+]
+
+function parseLicensePlate(lp) {
+  if (!lp) return { prefix: '', number: '', province: '' }
+  const parts = lp.trim().split(/\s+/)
+  if (parts.length >= 3) return { prefix: parts[0], number: parts[1], province: parts.slice(2).join(' ') }
+  if (parts.length === 2) {
+    const m = parts[0].match(/^([ก-ฮA-Za-z]+)(\d+)$/)
+    if (m) return { prefix: m[1], number: m[2], province: parts[1] }
+    return { prefix: parts[0], number: '', province: parts[1] }
+  }
+  return { prefix: lp, number: '', province: '' }
+}
+
+function expiryStatus(dateStr) {
+  if (!dateStr) return 'none'
+  const days = Math.floor((new Date(dateStr) - new Date()) / 86400000)
+  if (days < 0) return 'expired'
+  if (days <= 30) return 'warning'
+  return 'ok'
+}
+
+function expiryChip(dateStr) {
+  return {
+    none:    'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500',
+    expired: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
+    warning: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
+    ok:      'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+  }[expiryStatus(dateStr)]
+}
+
+function expiryShortLabel(dateStr, prefix) {
+  const s = expiryStatus(dateStr)
+  if (s === 'none') return `${prefix} -`
+  const days = Math.floor((new Date(dateStr) - new Date()) / 86400000)
+  if (s === 'expired') return `${prefix} หมดแล้ว`
+  if (s === 'warning') return `${prefix} ${days}ว.`
+  return `${prefix} ✓`
 }
 
 // --- Data ---
@@ -522,6 +797,23 @@ const detailVehicle = ref(null)
 const saving = ref(false)
 const currentPage = ref(1)
 const pageSize = 10
+
+const expandedId = ref(null)
+
+const photoFile = ref(null)
+const photoPreview = ref(null)
+
+function onVehiclePhotoChange(e) {
+  const file = e.target.files[0]
+  if (!file) return
+  photoFile.value = file
+  photoPreview.value = URL.createObjectURL(file)
+}
+
+function clearVehiclePhoto() {
+  photoFile.value = null
+  photoPreview.value = null
+}
 
 // --- QR ---
 const showQrModal = ref(false)
@@ -588,10 +880,11 @@ async function printAllQR() {
 }
 
 const defaultForm = () => ({
-  type: '', licensePlate: '', chassisNumber: '', engineNumber: '',
+  type: '', lpPrefix: '', lpNumber: '', lpProvince: '',
+  registrationBookNumber: '', chassisNumber: '', engineNumber: '',
   currentMileage: '', nextMileage: '', overMileage: '', status: 'ACTIVE', note: '',
-  prbDate: '', prbLmg: false, prbViriya: false, prbAkney: false, prbThewet: false, prbInsurance: false, prbBangkokInsurance: false, prbTaxDate: '', prbThirdParty: false, prbExpiry: '',
-  insLmg: false, insViriya: false, insThaiInsurance: false, insInsurance: false, insAkney: false, insThewet: false, insBangkokInsurance: false, insDate: '', insTaxDate: '', insExpiry: '',
+  prbDate: '', prbLmg: false, prbViriya: false, prbAkney: false, prbThewet: false, prbInsurance: false, prbBangkokInsurance: false, prbTaxDate: '', prbThirdParty: false, prbExpiry: '', prbContact: '',
+  insLmg: false, insViriya: false, insThaiInsurance: false, insInsurance: false, insAkney: false, insThewet: false, insBangkokInsurance: false, insDate: '', insTaxDate: '', insExpiry: '', insContact: '',
   taxRenewalDate: ''
 })
 const form = ref(defaultForm())
@@ -615,7 +908,8 @@ const filteredVehicles = computed(() => {
     result = result.filter(v =>
       v.licensePlate.toLowerCase().includes(q) || v.type.toLowerCase().includes(q) ||
       (v.chassisNumber && v.chassisNumber.toLowerCase().includes(q)) ||
-      (v.engineNumber && v.engineNumber.toLowerCase().includes(q))
+      (v.engineNumber && v.engineNumber.toLowerCase().includes(q)) ||
+      (v.registrationBookNumber && v.registrationBookNumber.toLowerCase().includes(q))
     )
   }
   return result
@@ -634,42 +928,48 @@ function statusLabel(s) {
 }
 function statusColor(s) {
   return {
-    ACTIVE: 'bg-emerald-50 text-emerald-500',
-    IN_USE: 'bg-blue-50 text-blue-500',
-    MAINTENANCE: 'bg-amber-50 text-amber-500',
-    INACTIVE: 'bg-slate-100 text-slate-400'
+    ACTIVE: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500',
+    IN_USE: 'bg-blue-50 dark:bg-blue-900/20 text-blue-500',
+    MAINTENANCE: 'bg-amber-50 dark:bg-amber-900/20 text-amber-500',
+    INACTIVE: 'bg-slate-100 dark:bg-slate-700 text-slate-400'
   }[s]
 }
 function statusBadge(s) {
   return {
-    ACTIVE: 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200',
-    IN_USE: 'bg-blue-100 text-blue-700 ring-1 ring-blue-200',
-    MAINTENANCE: 'bg-amber-100 text-amber-700 ring-1 ring-amber-200',
-    INACTIVE: 'bg-slate-100 text-slate-500 ring-1 ring-slate-200'
+    ACTIVE: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 ring-1 ring-emerald-200 dark:ring-emerald-700/50',
+    IN_USE: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-700/50',
+    MAINTENANCE: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 ring-1 ring-amber-200 dark:ring-amber-700/50',
+    INACTIVE: 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 ring-1 ring-slate-200 dark:ring-slate-600'
   }[s]
 }
-function fmtDate(d) { return d ? new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '-' }
+function fmtDate(d) { return fmtDateTh(d) }
 function num(n) { return n != null ? Number(n).toLocaleString() : '-' }
 
 function openDetail(v) { detailVehicle.value = v }
 
 function openForm(v) {
+  photoFile.value = null
   if (v) {
     editingVehicle.value = v
+    photoPreview.value = v.photo ? `${BASE_URL}/uploads/${v.photo}` : null
     const f = defaultForm()
     for (const key of Object.keys(f)) {
       if (v[key] !== undefined && v[key] !== null) {
-        // Convert dates to YYYY-MM-DD for input[type=date]
-        if (typeof v[key] === 'string' && v[key].includes('T') && key !== 'note') {
-          f[key] = v[key].slice(0, 10)
+        if ((key.endsWith('Date') || key.endsWith('Expiry')) && key !== 'note') {
+          f[key] = toLocalDateStr(v[key])
         } else {
           f[key] = v[key]
         }
       }
     }
+    const parsed = parseLicensePlate(v.licensePlate)
+    f.lpPrefix = parsed.prefix
+    f.lpNumber = parsed.number
+    f.lpProvince = parsed.province
     form.value = f
   } else {
     editingVehicle.value = null
+    photoPreview.value = null
     form.value = defaultForm()
   }
   showFormModal.value = true
@@ -678,14 +978,29 @@ function openForm(v) {
 async function loadVehicles() { vehicles.value = (await api.get('/vehicles')).data }
 
 async function saveVehicle() {
+  const lp = [form.value.lpPrefix, form.value.lpNumber, form.value.lpProvince].filter(Boolean).join(' ')
+  if (!form.value.type || !lp) return swalError('กรุณากรอกประเภทรถและเลขทะเบียนให้ครบ')
   saving.value = true
   try {
-    const payload = { ...form.value, userId: auth.user.id }
+    const fd = new FormData()
+    const skipKeys = new Set(['lpPrefix', 'lpNumber', 'lpProvince'])
+    for (const [key, val] of Object.entries(form.value)) {
+      if (skipKeys.has(key)) continue
+      if (val !== null && val !== undefined && val !== '') fd.append(key, val)
+    }
+    fd.append('licensePlate', lp)
+    fd.append('userId', auth.user.id)
+    if (photoFile.value) {
+      fd.append('photo', photoFile.value)
+    } else if (editingVehicle.value && !photoPreview.value && editingVehicle.value.photo) {
+      fd.append('clearPhoto', 'true')
+    }
+
     if (editingVehicle.value) {
-      await api.put(`/vehicles/${editingVehicle.value.id}`, payload)
+      await api.put(`/vehicles/${editingVehicle.value.id}`, fd)
       swalSuccess('อัพเดทสำเร็จ', 'แก้ไขยานพาหนะเรียบร้อยแล้ว')
     } else {
-      await api.post('/vehicles', payload)
+      await api.post('/vehicles', fd)
       swalSuccess('เพิ่มสำเร็จ', 'เพิ่มยานพาหนะใหม่เรียบร้อยแล้ว')
     }
     showFormModal.value = false
@@ -708,7 +1023,7 @@ async function confirmDelete(v) {
 async function exportVehicles() {
   try {
     const response = await api.get('/vehicles/export', { responseType: 'blob' })
-    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const url = window.URL.createObjectURL(response.data)
     const link = document.createElement('a')
     link.href = url
     link.setAttribute('download', `vehicles_${new Date().toISOString().slice(0, 10)}.xlsx`)
@@ -718,7 +1033,13 @@ async function exportVehicles() {
     window.URL.revokeObjectURL(url)
     swalSuccess('Export สำเร็จ', 'ดาวน์โหลดไฟล์ Excel เรียบร้อยแล้ว')
   } catch (err) {
-    swalError('เกิดข้อผิดพลาด', 'ไม่สามารถ export ข้อมูลได้')
+    if (err.response?.data instanceof Blob) {
+      const text = await err.response.data.text().catch(() => '')
+      const msg = (() => { try { return JSON.parse(text).error } catch { return text || 'ไม่สามารถ export ข้อมูลได้' } })()
+      swalError('Export ไม่สำเร็จ', msg)
+    } else {
+      swalError('Export ไม่สำเร็จ', err.response?.data?.error || 'ไม่สามารถเชื่อมต่อ Backend')
+    }
   }
 }
 

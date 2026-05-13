@@ -3,19 +3,19 @@
     <div class="relative" ref="wrapperRef">
       <ListboxButton
         @click="computePos(open)"
-        class="relative w-full cursor-pointer rounded-xl bg-white border border-slate-300 py-3 pl-4 pr-10 text-left text-sm shadow-sm transition-all hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        :class="{ 'bg-slate-50!': !modelValue }">
+        class="relative w-full cursor-pointer rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 py-3 pl-4 pr-10 text-left text-sm shadow-sm transition-all hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        :class="{ 'bg-slate-50! dark:bg-slate-700!': !modelValue }">
         <span class="flex items-center gap-2.5 truncate">
-          <component v-if="selectedOption?.icon" :is="selectedOption.icon" class="w-5 h-5 text-slate-400 shrink-0" />
+          <component v-if="selectedOption?.icon" :is="selectedOption.icon" class="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0" />
           <span v-else-if="icon">
-            <component :is="icon" class="w-5 h-5 text-slate-400 shrink-0" />
+            <component :is="icon" class="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0" />
           </span>
-          <span :class="modelValue !== '' && modelValue !== null ? 'text-slate-800' : 'text-slate-400'">
+          <span :class="modelValue !== '' && modelValue !== null ? 'text-slate-800 dark:text-white' : 'text-slate-400 dark:text-slate-500'">
             {{ selectedOption?.label || placeholder }}
           </span>
         </span>
         <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-          <ChevronUpDownIcon class="w-5 h-5 text-slate-400" />
+          <ChevronUpDownIcon class="w-5 h-5 text-slate-400 dark:text-slate-500" />
         </span>
       </ListboxButton>
 
@@ -30,13 +30,13 @@
           <ListboxOptions
             v-if="open"
             static
-            class="fixed max-h-60 overflow-auto rounded-xl bg-white py-1 text-sm shadow-2xl ring-1 ring-black/5 focus:outline-none"
+            class="fixed max-h-60 overflow-auto rounded-xl bg-white dark:bg-slate-800 py-1 text-sm shadow-2xl ring-1 ring-black/5 dark:ring-white/10 focus:outline-none"
             :style="dropdownStyle">
             <ListboxOption v-if="placeholder && allowEmpty"
               :value="emptyValue"
               v-slot="{ active }"
               class="relative cursor-pointer select-none">
-              <div :class="[active ? 'bg-blue-50 text-blue-700' : 'text-slate-400', 'flex items-center gap-2.5 py-2.5 px-4']">
+              <div :class="[active ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-slate-400 dark:text-slate-500', 'flex items-center gap-2.5 py-2.5 px-4']">
                 <span class="w-5 h-5 shrink-0"></span>
                 {{ placeholder }}
               </div>
@@ -46,16 +46,16 @@
               v-slot="{ active, selected }"
               class="relative cursor-pointer select-none">
               <div :class="[
-                active ? 'bg-blue-50' : '',
-                selected ? 'bg-blue-50/50 font-semibold' : '',
+                active ? 'bg-blue-50 dark:bg-blue-900/30' : '',
+                selected ? 'bg-blue-50/50 dark:bg-blue-900/20 font-semibold' : '',
                 'flex items-center gap-2.5 py-2.5 px-4 transition-colors'
               ]">
-                <component v-if="opt.icon" :is="opt.icon" :class="[selected ? 'text-blue-600' : 'text-slate-400', 'w-5 h-5 shrink-0']" />
+                <component v-if="opt.icon" :is="opt.icon" :class="[selected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500', 'w-5 h-5 shrink-0']" />
                 <span v-else-if="icon">
-                  <component :is="icon" :class="[selected ? 'text-blue-600' : 'text-slate-400', 'w-5 h-5 shrink-0']" />
+                  <component :is="icon" :class="[selected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500', 'w-5 h-5 shrink-0']" />
                 </span>
-                <span :class="[selected ? 'text-blue-700' : 'text-slate-700']">{{ opt.label }}</span>
-                <CheckIcon v-if="selected" class="w-4 h-4 text-blue-600 ml-auto shrink-0" />
+                <span :class="[selected ? 'text-blue-700 dark:text-blue-300' : 'text-slate-700 dark:text-slate-200']">{{ opt.label }}</span>
+                <CheckIcon v-if="selected" class="w-4 h-4 text-blue-600 dark:text-blue-400 ml-auto shrink-0" />
               </div>
             </ListboxOption>
           </ListboxOptions>
@@ -97,7 +97,7 @@ function computePos(isCurrentlyOpen) {
 
   dropdownStyle.value = {
     zIndex: 9999,
-    width: rect.width + 'px',
+    minWidth: rect.width + 'px',
     left: rect.left + 'px',
     ...(showAbove
       ? { bottom: (window.innerHeight - rect.top + 4) + 'px' }

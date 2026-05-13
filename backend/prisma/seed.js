@@ -8,9 +8,10 @@ async function main() {
   // Create default admin user
   await prisma.user.upsert({
     where: { username: 'Admin' },
-    update: { password: hashedPassword },
+    update: { password: hashedPassword, displayName: 'ผู้ดูแลระบบ' },
     create: {
       username: 'Admin',
+      displayName: 'ผู้ดูแลระบบ',
       phone: '0000000000',
       password: hashedPassword,
       role: 'ADMIN'
