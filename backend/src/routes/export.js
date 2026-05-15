@@ -4,6 +4,7 @@ const ExcelJS = require('exceljs')
 const PDFDocument = require('pdfkit')
 const prisma = require('../services/prisma')
 const INSPECTION_ITEMS = require('../services/inspectionItems')
+const { blobNameFromUrl, generateSasUrl } = require('../services/azureBlob')
 const path = require('path')
 const fs = require('fs')
 
@@ -12,6 +13,21 @@ const SGSISO_PATH = path.join(__dirname, '..', 'images', 'SGSISO.jpg')
 
 const THAI_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
   'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
+
+// Generate a 7-day SAS URL suitable for embedding in exported files
+function toExportUrl(url) {
+  if (!url || !url.startsWith('https://')) return null
+  try {
+    const name = blobNameFromUrl(url)
+    return name ? generateSasUrl(name, 7 * 24) : null
+  } catch { return null }
+}
+
+// Returns an ExcelJS hyperlink object, or '' if no URL
+function photoCell(url) {
+  const link = toExportUrl(url)
+  return link ? { text: 'ดูรูป', hyperlink: link } : ''
+}
 
 async function getMonthlyData(vehicleId, month, year) {
   const startDate = new Date(Number(year), Number(month) - 1, 1)
@@ -517,7 +533,10 @@ function styleDataRows(ws, startRow = 2) {
     row.height = 18
     for (let c = 1; c <= colCount; c++) {
       const cell = row.getCell(c)
-      cell.font = { name: 'TH Sarabun New', size: 11 }
+      const isLink = cell.value && typeof cell.value === 'object' && cell.value.hyperlink
+      cell.font = isLink
+        ? { name: 'TH Sarabun New', size: 11, color: { argb: 'FF0563C1' }, underline: true }
+        : { name: 'TH Sarabun New', size: 11 }
       cell.alignment = { vertical: 'middle', wrapText: true }
       cell.border = thinB
     }
@@ -579,6 +598,8 @@ router.get('/bookings', async (req, res) => {
       { header: 'วันที่คืน',        key: 'returnDate',   width: 18 },
       { header: 'สถานะ',            key: 'status',       width: 14 },
       { header: 'หมายเหตุ',         key: 'note',         width: 22 },
+      { header: 'รูปไมล์ออก',       key: 'photoOut',     width: 12 },
+      { header: 'รูปไมล์เข้า',      key: 'photoIn',      width: 12 },
     ]
 
     const SL = { CHECKED_OUT: 'กำลังใช้งาน', RETURNED: 'คืนแล้ว', CANCELLED: 'ยกเลิก' }
@@ -596,7 +617,9 @@ router.get('/bookings', async (req, res) => {
       distance: b.distance ?? '',
       returnDate: fmtDT(b.returnDate),
       status: SL[b.status] || b.status,
-      note: b.returnNote || ''
+      note: b.returnNote || '',
+      photoOut: photoCell(b.mileageOutPhoto),
+      photoIn: photoCell(b.mileageInPhoto),
     }))
 
     excelHeader(ws, 'FFBDD7EE')
@@ -639,8 +662,12 @@ router.get('/fuels', async (req, res) => {
       { header: 'ไมล์หลังเติม',   key: 'mileageAfter',  width: 14 },
       { header: 'ลิตร',            key: 'liters',     width: 10 },
       { header: 'จำนวนเงิน (บ.)', key: 'amount',     width: 14 },
-      { header: 'ผู้บันทึก',       key: 'user',       width: 16 },
-      { header: 'หมายเหตุ',        key: 'note',       width: 20 },
+      { header: 'ผู้บันทึก',       key: 'user',          width: 16 },
+      { header: 'หมายเหตุ',        key: 'note',          width: 20 },
+      { header: 'รูปไมล์',         key: 'photoMileage',  width: 12 },
+      { header: 'รูปเกจ',          key: 'photoGauge',    width: 12 },
+      { header: 'รูปหัวจ่าย',      key: 'photoPump',     width: 12 },
+      { header: 'รูปใบเสร็จ',      key: 'photoReceipt',  width: 12 },
     ]
 
     fuels.forEach((f, i) => ws.addRow({
@@ -653,7 +680,11 @@ router.get('/fuels', async (req, res) => {
       liters: f.liters,
       amount: f.amount,
       user: f.user.displayName || f.user.username,
-      note: f.note || ''
+      note: f.note || '',
+      photoMileage: photoCell(f.mileagePhotoAfter || f.mileagePhotoBefore),
+      photoGauge: photoCell(f.gaugePhotoAfter || f.gaugePhotoBefore),
+      photoPump: photoCell(f.pumpPhoto),
+      photoReceipt: photoCell(f.receiptPhoto),
     }))
 
     // Summary row
@@ -709,6 +740,7 @@ router.get('/repairs', async (req, res) => {
       { header: 'ผู้อนุมัติ',       key: 'approver',   width: 16 },
       { header: 'วันที่อนุมัติ',    key: 'approvedAt', width: 18 },
       { header: 'หมายเหตุผู้อนุมัติ', key: 'approverNote', width: 24 },
+      { header: 'เอกสาร/รูปประกอบ',  key: 'photoDoc',     width: 16 },
     ]
 
     const SL = { PENDING: 'รออนุมัติ', APPROVED: 'อนุมัติแล้ว', REJECTED: 'ไม่อนุมัติ', COMPLETED: 'เสร็จสิ้น' }
@@ -724,7 +756,8 @@ router.get('/repairs', async (req, res) => {
       user: r.user.displayName || r.user.username,
       approver: r.approvedBy ? (r.approvedBy.displayName || r.approvedBy.username) : '',
       approvedAt: fmtDT(r.approvedAt),
-      approverNote: r.approverNote || ''
+      approverNote: r.approverNote || '',
+      photoDoc: photoCell(r.documentPath),
     }))
 
     excelHeader(ws, 'FFFCE4D6')
@@ -814,14 +847,25 @@ router.get('/vehicles-docs', async (req, res) => {
 // ─── Export: Combined Multi-Sheet ────────────────────────────────────────────
 router.post('/combined', async (req, res) => {
   try {
-    const { vehicleIds = [], topics = [], month, year } = req.body
+    const { vehicleIds = [], topics = [], month, year, startDate: rawStart, endDate: rawEnd } = req.body
     if (!topics.length) return res.status(400).json({ error: 'กรุณาเลือกอย่างน้อย 1 หัวข้อ' })
 
     const vIds = vehicleIds.map(Number).filter(Boolean)
     const vehicleIdWhere = vIds.length ? { in: vIds } : undefined
 
-    const startDate = (month && year) ? new Date(Number(year), Number(month) - 1, 1) : null
-    const endDate   = (month && year) ? new Date(Number(year), Number(month), 0, 23, 59, 59) : null
+    let startDate = null, endDate = null
+    if (rawStart) {
+      startDate = new Date(rawStart)
+      endDate   = rawEnd ? new Date(rawEnd + 'T23:59:59') : new Date(rawStart + 'T23:59:59')
+    } else if (year) {
+      if (month) {
+        startDate = new Date(Number(year), Number(month) - 1, 1)
+        endDate   = new Date(Number(year), Number(month), 0, 23, 59, 59)
+      } else {
+        startDate = new Date(Number(year), 0, 1)
+        endDate   = new Date(Number(year), 11, 31, 23, 59, 59)
+      }
+    }
 
     const wb = new ExcelJS.Workbook()
 
@@ -901,6 +945,8 @@ router.post('/combined', async (req, res) => {
         { header: 'วันที่คืน',        key: 'returnDate',   width: 18 },
         { header: 'สถานะ',            key: 'status',       width: 14 },
         { header: 'หมายเหตุ',         key: 'note',         width: 22 },
+        { header: 'รูปไมล์ออก',       key: 'photoOut',     width: 12 },
+        { header: 'รูปไมล์เข้า',      key: 'photoIn',      width: 12 },
       ]
       const BSL = { CHECKED_OUT: 'กำลังใช้งาน', RETURNED: 'คืนแล้ว', CANCELLED: 'ยกเลิก' }
       bookings.forEach((b, i) => ws.addRow({
@@ -911,7 +957,9 @@ router.post('/combined', async (req, res) => {
         driver: b.driver.displayName || b.driver.username,
         mileageOut: b.mileageOut, mileageIn: b.mileageIn ?? '',
         distance: b.distance ?? '', returnDate: fmtDT(b.returnDate),
-        status: BSL[b.status] || b.status, note: b.returnNote || ''
+        status: BSL[b.status] || b.status, note: b.returnNote || '',
+        photoOut: photoCell(b.mileageOutPhoto),
+        photoIn: photoCell(b.mileageInPhoto),
       }))
       excelHeader(ws, 'FFBDD7EE')
       styleDataRows(ws)
@@ -944,13 +992,21 @@ router.post('/combined', async (req, res) => {
         { header: 'จำนวนเงิน (บ.)', key: 'amount',        width: 14 },
         { header: 'ผู้บันทึก',       key: 'user',          width: 16 },
         { header: 'หมายเหตุ',        key: 'note',          width: 20 },
+        { header: 'รูปไมล์',         key: 'photoMileage',  width: 12 },
+        { header: 'รูปเกจ',          key: 'photoGauge',    width: 12 },
+        { header: 'รูปหัวจ่าย',      key: 'photoPump',     width: 12 },
+        { header: 'รูปใบเสร็จ',      key: 'photoReceipt',  width: 12 },
       ]
       fuels.forEach((f, i) => ws.addRow({
         no: i + 1, date: fmtDT(f.createdAt),
         vehicle: f.vehicle.type, plate: f.vehicle.licensePlate,
         mileageBefore: f.mileageBefore, mileageAfter: f.mileageAfter ?? '',
         liters: f.liters, amount: f.amount,
-        user: f.user.displayName || f.user.username, note: f.note || ''
+        user: f.user.displayName || f.user.username, note: f.note || '',
+        photoMileage: photoCell(f.mileagePhotoAfter || f.mileagePhotoBefore),
+        photoGauge: photoCell(f.gaugePhotoAfter || f.gaugePhotoBefore),
+        photoPump: photoCell(f.pumpPhoto),
+        photoReceipt: photoCell(f.receiptPhoto),
       }))
       const totalLiters = fuels.reduce((s, f) => s + f.liters, 0)
       const totalAmount = fuels.reduce((s, f) => s + f.amount, 0)
@@ -991,6 +1047,7 @@ router.post('/combined', async (req, res) => {
         { header: 'ผู้อนุมัติ',           key: 'approver',    width: 16 },
         { header: 'วันที่อนุมัติ',        key: 'approvedAt',  width: 18 },
         { header: 'หมายเหตุผู้อนุมัติ',  key: 'approverNote', width: 24 },
+        { header: 'เอกสาร/รูปประกอบ',   key: 'photoDoc',     width: 16 },
       ]
       const RSL = { PENDING: 'รออนุมัติ', APPROVED: 'อนุมัติแล้ว', REJECTED: 'ไม่อนุมัติ', COMPLETED: 'เสร็จสิ้น' }
       repairs.forEach((r, i) => ws.addRow({
@@ -1000,7 +1057,8 @@ router.post('/combined', async (req, res) => {
         status: RSL[r.status] || r.status,
         user: r.user.displayName || r.user.username,
         approver: r.approvedBy ? (r.approvedBy.displayName || r.approvedBy.username) : '',
-        approvedAt: fmtDT(r.approvedAt), approverNote: r.approverNote || ''
+        approvedAt: fmtDT(r.approvedAt), approverNote: r.approverNote || '',
+        photoDoc: photoCell(r.documentPath),
       }))
       excelHeader(ws, 'FFFCE4D6')
       styleDataRows(ws)
@@ -1060,8 +1118,15 @@ router.post('/combined', async (req, res) => {
 
     if (wb.worksheets.length === 0) return res.status(400).json({ error: 'ไม่มีข้อมูลสำหรับ Export' })
 
-    const monthLabel = month ? THAI_MONTHS[Number(month) - 1] : 'all'
-    const filename = `export_${monthLabel}_${year || ''}.xlsx`
+    let filename
+    if (rawStart && rawStart === rawEnd) {
+      filename = `export_${rawStart}.xlsx`
+    } else if (rawStart) {
+      filename = `export_${rawStart}_ถึง_${rawEnd || rawStart}.xlsx`
+    } else {
+      const monthLabel = month ? THAI_MONTHS[Number(month) - 1] : 'ทั้งปี'
+      filename = month ? `export_${monthLabel}_${year}.xlsx` : `export_ปี${year}.xlsx`
+    }
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`)
     await wb.xlsx.write(res)

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="space-y-6">
 
     <!-- Header -->
@@ -245,14 +245,17 @@
         <TabPanel>
           <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-500/25 dark:shadow-black/30 border border-gray-200 dark:border-slate-700 overflow-hidden mt-0">
             <div class="px-5 py-4 border-b border-gray-200 dark:border-slate-700">
-              <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-wrap">
                 <h2 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
                   <ClockIcon class="w-5 h-5 text-amber-500" />
                   ประวัติการเติมน้ำมัน
                   <span class="text-sm font-normal text-slate-400 dark:text-slate-500">{{ histTotal }} รายการ</span>
                 </h2>
-                <div class="w-56">
-                  <AppSelect v-model="filterVehicleId" :options="vehicleFilterOptions" :icon="TruckIcon" placeholder="ยานพาหนะทั้งหมด" />
+                <div class="flex flex-wrap items-center gap-2">
+                  <AppDateFilter default-mode="all" @change="onDateChange" />
+                  <div class="w-44">
+                    <AppSelect v-model="filterVehicleId" :options="vehicleFilterOptions" :icon="TruckIcon" placeholder="ยานพาหนะทั้งหมด" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -293,10 +296,10 @@
                       <div class="flex gap-1 flex-wrap">
                         <template v-for="pf in photoFields" :key="pf.field">
                           <a v-if="log[pf.field]"
-                            :href="`${BASE_URL}/uploads/${log[pf.field]}`" target="_blank"
+                            :href="resolveUrl(log[pf.field])" target="_blank"
                             :title="pf.label"
                             class="w-7 h-7 rounded-lg overflow-hidden border border-slate-200 block hover:ring-2 hover:ring-amber-400 transition shrink-0">
-                            <img :src="`${BASE_URL}/uploads/${log[pf.field]}`" class="w-full h-full object-cover" />
+                            <img :src="resolveUrl(log[pf.field])" class="w-full h-full object-cover" />
                           </a>
                         </template>
                         <span v-if="!hasAnyPhoto(log)" class="text-xs text-slate-300">—</span>
@@ -339,10 +342,10 @@
                     <div class="flex gap-1 mt-1.5 flex-wrap">
                       <template v-for="pf in photoFields" :key="pf.field">
                         <a v-if="log[pf.field]"
-                          :href="`${BASE_URL}/uploads/${log[pf.field]}`" target="_blank"
+                          :href="resolveUrl(log[pf.field])" target="_blank"
                           :title="pf.label"
                           class="w-8 h-8 rounded-lg overflow-hidden border border-slate-200 block shrink-0">
-                          <img :src="`${BASE_URL}/uploads/${log[pf.field]}`" class="w-full h-full object-cover" />
+                          <img :src="resolveUrl(log[pf.field])" class="w-full h-full object-cover" />
                         </a>
                       </template>
                     </div>
@@ -394,13 +397,20 @@ import {
   XMarkIcon, TrashIcon, CameraIcon, ArrowTrendingUpIcon
 } from '@heroicons/vue/24/outline'
 import AppSelect from '../components/AppSelect.vue'
+import AppDateFilter from '../components/AppDateFilter.vue'
 import api from '../stores/api'
 import { fmtDateTimeTh } from '../stores/date'
 import { auth } from '../stores/auth'
 import { swalSuccess, swalError, swalConfirm } from '../stores/swal'
 
-const BASE_URL = `http://${window.location.hostname}:8099`
+const BASE_URL = ``
 const PAGE_SIZE = 10
+function resolveUrl(val) {
+  if (!val) return null
+  if (val.startsWith('https://')) return `${BASE_URL}/api/media/proxy?url=${encodeURIComponent(val)}`
+  if (val.startsWith('http')) return val
+  return `${BASE_URL}/uploads/${val}`
+}
 
 const vehicles = ref([])
 const fuelLogs = ref([])
@@ -408,9 +418,18 @@ const submitting = ref(false)
 const activeTab = ref(0)
 
 const filterVehicleId = ref('')
+const filterStart = ref('')
+const filterEnd = ref('')
 const histPage = ref(1)
 const histTotal = ref(0)
 const histTotalPages = ref(0)
+
+function onDateChange({ startDate, endDate }) {
+  filterStart.value = startDate
+  filterEnd.value = endDate
+  histPage.value = 1
+  loadHistory()
+}
 
 const photoFields = [
   { field: 'mileagePhotoBefore', label: 'ไมล์ก่อนเติม' },
@@ -474,6 +493,8 @@ async function loadVehicles() {
 async function loadHistory() {
   const params = { page: histPage.value, limit: PAGE_SIZE }
   if (filterVehicleId.value) params.vehicleId = filterVehicleId.value
+  if (filterStart.value) params.startDate = filterStart.value
+  if (filterEnd.value) params.endDate = filterEnd.value
   const res = await api.get('/fuels', { params })
   fuelLogs.value = res.data.logs
   histTotal.value = res.data.total

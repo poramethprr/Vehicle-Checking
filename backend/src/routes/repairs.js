@@ -1,31 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const path = require('path')
-const fs = require('fs')
-const multer = require('multer')
 const prisma = require('../services/prisma')
 const { logActivity } = require('../services/logger')
-
-const uploadDir = path.join(__dirname, '..', '..', 'uploads')
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true })
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname)
-    cb(null, `repair-${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`)
-  }
-})
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 20 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    const allowed = /\.(jpg|jpeg|png|gif|webp|pdf)$/i
-    if (allowed.test(path.extname(file.originalname))) cb(null, true)
-    else cb(new Error('อนุญาตเฉพาะไฟล์รูปภาพและ PDF'))
-  }
-})
+const { uploadWithPdf } = require('../middleware/upload')
+const { uploadToBlob, deleteFromBlob } = require('../services/azureBlob')
 
 const INCLUDE = {
   vehicle: { select: { id: true, type: true, licensePlate: true } },
@@ -68,7 +46,7 @@ router.get('/', async (req, res) => {
 })
 
 // POST / — create repair request
-router.post('/', upload.single('document'), async (req, res) => {
+router.post('/', uploadWithPdf.single('document'), async (req, res) => {
   try {
     const { vehicleId, userId, title, detail, estimatedCost } = req.body
     if (!vehicleId || !userId || !title || !detail) {
@@ -82,7 +60,7 @@ router.post('/', upload.single('document'), async (req, res) => {
         title: title.trim(),
         detail: detail.trim(),
         estimatedCost: estimatedCost ? Number(estimatedCost) : null,
-        documentPath: req.file ? req.file.filename : null,
+        documentPath: req.file ? await uploadToBlob(req.file.buffer, req.file.originalname, 'repair-') : null,
         status: 'PENDING'
       },
       include: INCLUDE
@@ -173,10 +151,7 @@ router.delete('/:id', async (req, res) => {
     const repair = await prisma.repairRequest.findUnique({ where: { id: Number(req.params.id) }, include: { vehicle: { select: { licensePlate: true } } } })
     if (!repair) return res.status(404).json({ error: 'ไม่พบข้อมูล' })
 
-    if (repair.documentPath) {
-      const filePath = path.join(uploadDir, repair.documentPath)
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
-    }
+    if (repair.documentPath) deleteFromBlob(repair.documentPath).catch(() => {})
 
     await prisma.repairRequest.delete({ where: { id: Number(req.params.id) } })
     if (actionUserId) {

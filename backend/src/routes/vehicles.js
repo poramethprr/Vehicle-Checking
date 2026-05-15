@@ -5,18 +5,10 @@ const { logActivity } = require('../services/logger')
 const ExcelJS = require('exceljs')
 const multer = require('multer')
 const path = require('path')
-const fs = require('fs')
+const { uploadToBlob, deleteFromBlob } = require('../services/azureBlob')
 
-const upload = multer({ dest: 'uploads/' })
-
-const photoStorage = multer.diskStorage({
-  destination: 'uploads/',
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase()
-    cb(null, `vehicle_${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`)
-  }
-})
-const photoUpload = multer({ storage: photoStorage, limits: { fileSize: 20 * 1024 * 1024 } })
+const upload = multer({ storage: multer.memoryStorage() })
+const photoUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } })
 
 // Helper functions
 function mapStatus(statusText) {
@@ -165,9 +157,8 @@ const BOOL_FIELDS = [
   'insLmg', 'insViriya', 'insThaiInsurance', 'insInsurance', 'insAkney', 'insThewet', 'insBangkokInsurance'
 ]
 
-function deletePhotoFile(filename) {
-  if (!filename) return
-  try { fs.unlinkSync(path.join('uploads', filename)) } catch {}
+function deletePhotoFile(url) {
+  deleteFromBlob(url).catch(() => {})
 }
 
 // แปลง "YYYY-MM-DD" string จาก datepicker → UTC midnight อย่างถูกต้อง
@@ -350,7 +341,7 @@ router.post('/import', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'กรุณาเลือกไฟล์ Excel' })
 
     const workbook = new ExcelJS.Workbook()
-    await workbook.xlsx.readFile(req.file.path)
+    await workbook.xlsx.load(req.file.buffer)
 
     const worksheet = workbook.getWorksheet(1)
     if (!worksheet) return res.status(400).json({ error: 'ไม่พบข้อมูลในไฟล์ Excel' })
@@ -444,8 +435,6 @@ router.post('/import', upload.single('file'), async (req, res) => {
       }
     }
 
-    try { fs.unlinkSync(req.file.path) } catch {}
-
     if (req.body.userId) {
       await logActivity(Number(req.body.userId), 'IMPORT_VEHICLES', `นำเข้ายานพาหนะ ${imported} รายการ`, 'Vehicle', null)
     }
@@ -498,12 +487,16 @@ router.get('/:id', async (req, res) => {
 
 // Create vehicle
 router.post('/', photoUpload.single('photo'), async (req, res) => {
+  let photoUrl = null
   try {
     const data = pickVehicleData(req.body)
     if (!data.type || !data.licensePlate) {
       return res.status(400).json({ error: 'กรุณากรอกประเภทรถและทะเบียน' })
     }
-    if (req.file) data.photo = req.file.filename
+    if (req.file) {
+      photoUrl = await uploadToBlob(req.file.buffer, req.file.originalname, 'vehicle-')
+      data.photo = photoUrl
+    }
 
     const vehicle = await prisma.vehicle.create({ data })
 
@@ -513,7 +506,7 @@ router.post('/', photoUpload.single('photo'), async (req, res) => {
 
     res.json(vehicle)
   } catch (err) {
-    if (req.file) deletePhotoFile(req.file.filename)
+    if (photoUrl) deletePhotoFile(photoUrl)
     if (err.code === 'P2002') return res.status(400).json({ error: 'ทะเบียนนี้มีอยู่ในระบบแล้ว' })
     res.status(500).json({ error: err.message })
   }
@@ -521,13 +514,15 @@ router.post('/', photoUpload.single('photo'), async (req, res) => {
 
 // Update vehicle
 router.put('/:id', photoUpload.single('photo'), async (req, res) => {
+  let newPhotoUrl = null
   try {
     const existing = await prisma.vehicle.findUnique({ where: { id: Number(req.params.id) } })
     const data = pickVehicleData(req.body)
 
     if (req.file) {
       if (existing?.photo) deletePhotoFile(existing.photo)
-      data.photo = req.file.filename
+      newPhotoUrl = await uploadToBlob(req.file.buffer, req.file.originalname, 'vehicle-')
+      data.photo = newPhotoUrl
     } else if (req.body.clearPhoto === 'true') {
       if (existing?.photo) deletePhotoFile(existing.photo)
       data.photo = null
@@ -541,7 +536,7 @@ router.put('/:id', photoUpload.single('photo'), async (req, res) => {
 
     res.json(vehicle)
   } catch (err) {
-    if (req.file) deletePhotoFile(req.file.filename)
+    if (newPhotoUrl) deletePhotoFile(newPhotoUrl)
     res.status(500).json({ error: err.message })
   }
 })

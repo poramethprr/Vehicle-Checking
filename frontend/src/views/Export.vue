@@ -20,24 +20,17 @@
         <h3 class="font-bold text-slate-700 dark:text-slate-200 text-sm mb-4 flex items-center gap-2">
           <FunnelIcon class="w-4 h-4 text-rose-500" /> ตัวกรองข้อมูล
         </h3>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <!-- Month -->
+        <div class="space-y-4">
+          <!-- Date filter -->
           <div>
-            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-              <CalendarDaysIcon class="w-3.5 h-3.5 inline -mt-0.5 mr-0.5" /> เดือน
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+              <CalendarIcon class="w-3.5 h-3.5 inline -mt-0.5 mr-0.5" /> ช่วงเวลา
             </label>
-            <AppSelect v-model="month" :options="monthOptions" :allow-empty="false" :icon="CalendarDaysIcon" />
-          </div>
-          <!-- Year -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-              <CalendarIcon class="w-3.5 h-3.5 inline -mt-0.5 mr-0.5" /> ปี
-            </label>
-            <AppSelect v-model="year" :options="yearOptions" :allow-empty="false" :icon="CalendarIcon" />
+            <AppDateFilter @change="onDateChange" />
           </div>
           <!-- Vehicles -->
           <div>
-            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
               <TruckIcon class="w-3.5 h-3.5 inline -mt-0.5 mr-0.5" /> ยานพาหนะ
               <span class="text-slate-400 font-normal normal-case ml-1">(ว่าง = ทั้งหมด)</span>
             </label>
@@ -93,7 +86,7 @@
               <span v-else class="ml-1 text-slate-500 dark:text-slate-400 font-normal text-xs">· ยานพาหนะทั้งหมด</span>
             </div>
             <div class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-              {{ thaiMonths[month - 1] }} {{ year }} · ไฟล์ Excel (.xlsx) หลาย Sheet
+              {{ dateLabel }} · ไฟล์ Excel (.xlsx) หลาย Sheet
             </div>
             <!-- Sheet preview -->
             <div v-if="selectedTopics.length" class="flex flex-wrap gap-1.5 mt-2">
@@ -130,28 +123,31 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import {
-  ArrowDownTrayIcon, CalendarIcon, CalendarDaysIcon, TruckIcon, TableCellsIcon,
-  ClipboardDocumentCheckIcon, ClipboardDocumentListIcon, ArrowsRightLeftIcon,
+  ArrowDownTrayIcon, CalendarIcon, TruckIcon, TableCellsIcon,
+  ClipboardDocumentCheckIcon, ArrowsRightLeftIcon,
   FireIcon, WrenchScrewdriverIcon, DocumentTextIcon, FunnelIcon,
   CheckIcon, InformationCircleIcon
 } from '@heroicons/vue/24/outline'
-import AppSelect from '../components/AppSelect.vue'
 import AppMultiSelect from '../components/AppMultiSelect.vue'
+import AppDateFilter from '../components/AppDateFilter.vue'
 import api from '../stores/api'
 import { swalSuccess, swalError } from '../stores/swal'
 
-const thaiMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม']
-const now = new Date()
-
-const month = ref(now.getMonth() + 1)
-const year = ref(now.getFullYear())
 const vehicleIds = ref([])
 const vehicles = ref([])
 const loading = ref(false)
 const selectedTopics = ref(['inspections', 'bookings', 'fuels', 'repairs', 'docs'])
 
-const monthOptions = thaiMonths.map((m, i) => ({ value: i + 1, label: m }))
-const yearOptions = Array.from({ length: 5 }, (_, i) => ({ value: now.getFullYear() - i, label: String(now.getFullYear() - i) }))
+const filterStart = ref('')
+const filterEnd = ref('')
+const dateLabel = ref('')
+
+function onDateChange({ startDate, endDate, label }) {
+  filterStart.value = startDate
+  filterEnd.value = endDate
+  dateLabel.value = label
+}
+
 const vehicleOptions = computed(() => vehicles.value.map(v => ({ value: v.id, label: `${v.licensePlate} - ${v.type}` })))
 
 const topicList = [
@@ -212,8 +208,8 @@ async function doExport() {
       body: JSON.stringify({
         vehicleIds: vehicleIds.value,
         topics: selectedTopics.value,
-        month: month.value,
-        year: year.value
+        startDate: filterStart.value,
+        endDate: filterEnd.value
       })
     })
     if (!res.ok) {
@@ -224,7 +220,7 @@ async function doExport() {
     const blob = await res.blob()
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
-    a.download = `export_${thaiMonths[month.value - 1]}_${year.value}.xlsx`
+    a.download = `export_${dateLabel.value || filterStart.value}.xlsx`
     a.click()
     URL.revokeObjectURL(a.href)
     swalSuccess('Export สำเร็จ', `ดาวน์โหลด ${selectedTopics.value.length} Sheet เรียบร้อยแล้ว`)

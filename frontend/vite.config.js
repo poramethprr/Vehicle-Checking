@@ -2,11 +2,12 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import vueDevTools from 'vite-plugin-vue-devtools'
+import basicSsl from '@vitejs/plugin-basic-ssl'
 import { fileURLToPath, URL } from 'node:url'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), tailwindcss(), vueDevTools()],
+  plugins: [vue(), tailwindcss(), vueDevTools(), basicSsl()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
@@ -14,6 +15,11 @@ export default defineConfig({
   },
   server: {
     port: 3099,
-    host: '0.0.0.0'
+    host: '0.0.0.0',
+    https: true,
+    proxy: {
+      '/api': { target: 'http://localhost:8099', changeOrigin: true },
+      '/uploads': { target: 'http://localhost:8099', changeOrigin: true }
+    }
   }
 })

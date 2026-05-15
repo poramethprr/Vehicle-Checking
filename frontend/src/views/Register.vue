@@ -153,7 +153,9 @@ const router = useRouter()
 
 const roleOptions = [
   { value: 'STAFF', label: 'Staff (เจ้าหน้าที่)' },
-  { value: 'ADMIN', label: 'Admin (ผู้ดูแล)' }
+  { value: 'MANAGER', label: 'Manager (หัวหน้ายานพาหนะ)' },
+  { value: 'MAID', label: 'Maid (แม่บ้าน)' },
+  { value: 'ADMIN', label: 'Admin (ผู้ดูแลระบบ)' }
 ]
 
 async function register() {

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
     <div class="relative bg-linear-to-r from-orange-500 to-red-500 dark:from-orange-950 dark:to-red-950 rounded-2xl px-6 py-5 mb-5 overflow-hidden shadow-md shadow-orange-200 dark:shadow-black/20">
       <div class="absolute -top-6 -right-6 w-28 h-28 bg-white/10 rounded-full pointer-events-none"></div>
@@ -15,16 +15,22 @@
 
     <!-- Filter -->
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-500/25 dark:shadow-black/30 border border-gray-200 dark:border-slate-700 p-4 sm:p-5 mb-4">
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div><label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5">จากวันที่</label>
-          <input v-model="rp.startDate" type="date" class="w-full px-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 outline-none dark:bg-slate-700 dark:text-white" /></div>
-        <div><label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5">ถึงวันที่</label>
-          <input v-model="rp.endDate" type="date" class="w-full px-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 outline-none dark:bg-slate-700 dark:text-white" /></div>
-        <div><label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5">ยานพาหนะ</label>
-          <AppMultiSelect v-model="rp.vehicleIds" :options="vehicleOptions" placeholder="ทั้งหมด" :icon="TruckIcon" /></div>
-        <div><label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5">สถานะ</label>
-          <AppSelect v-model="rp.status" :options="rpStatusOptions" placeholder="ทั้งหมด" :icon="FunnelIcon" /></div>
-        <div class="flex items-end gap-2 col-span-2 sm:col-span-1">
+      <div class="flex flex-col gap-3">
+        <div class="flex flex-wrap items-start gap-3">
+          <div class="w-full">
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5">ช่วงเวลา</label>
+            <AppDateFilter default-mode="month" @change="({ startDate, endDate }) => { rp.startDate = startDate; rp.endDate = endDate }" />
+          </div>
+          <div class="flex-1 min-w-40">
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5">ยานพาหนะ</label>
+            <AppMultiSelect v-model="rp.vehicleIds" :options="vehicleOptions" placeholder="ทั้งหมด" :icon="TruckIcon" />
+          </div>
+          <div class="flex-1 min-w-32">
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5">สถานะ</label>
+            <AppSelect v-model="rp.status" :options="rpStatusOptions" placeholder="ทั้งหมด" :icon="FunnelIcon" />
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
           <button @click="loadRepairs" class="flex-1 bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 dark:from-orange-800 dark:to-red-900 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-1.5">
             <MagnifyingGlassIcon class="w-4 h-4" /> ค้นหา
           </button>
@@ -101,10 +107,11 @@ import { WrenchScrewdriverIcon, MagnifyingGlassIcon, TruckIcon, FunnelIcon, Arro
 import AppSelect from '../components/AppSelect.vue'
 import AppMultiSelect from '../components/AppMultiSelect.vue'
 import AppEmpty from '../components/AppEmpty.vue'
+import AppDateFilter from '../components/AppDateFilter.vue'
 import api from '../stores/api'
 import { fmtDateTh, fmtDateTimeTh } from '../stores/date'
 
-const BASE_URL = `http://${window.location.hostname}:8099`
+const BASE_URL = ``
 const vehicles = ref([])
 const vehicleOptions = computed(() => vehicles.value.map(v => ({ value: v.id, label: `${v.licensePlate} - ${v.type}` })))
 const rpStatusOptions = [{ value: 'PENDING', label: 'รออนุมัติ' }, { value: 'APPROVED', label: 'อนุมัติแล้ว' }, { value: 'REJECTED', label: 'ไม่อนุมัติ' }, { value: 'COMPLETED', label: 'เสร็จสิ้น' }]

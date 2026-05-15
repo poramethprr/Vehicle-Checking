@@ -9,7 +9,15 @@ datasource db {
 
 enum Role {
   ADMIN
+  MANAGER
   STAFF
+  MAID
+}
+
+enum CleaningIssueStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
 }
 
 enum InspectionStatus {
@@ -66,6 +74,9 @@ model User {
   repairsApproved      RepairRequest[]    @relation("RepairApprover")
   fuelLogs             FuelLog[]
   accidents            AccidentReport[]
+  cleaningLogs         CleaningLog[]
+  cleaningIssues       CleaningIssue[]    @relation("IssueReporter")
+  issuesResolved       CleaningIssue[]    @relation("IssueResolver")
 }
 
 model Vehicle {
@@ -261,6 +272,53 @@ model AccidentReport {
 
   vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CleaningArea {
+  id          Int      @id @default(autoincrement())
+  name        String
+  location    String?
+  description String?
+  photo       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  logs   CleaningLog[]
+  issues CleaningIssue[]
+}
+
+model CleaningLog {
+  id        Int          @id @default(autoincrement())
+  areaId    Int
+  userId    Int
+  photo     String?
+  note      String?
+  createdAt DateTime     @default(now())
+
+  area CleaningArea @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CleaningIssue {
+  id           Int                  @id @default(autoincrement())
+  areaId       Int
+  userId       Int
+  title        String
+  description  String?
+  status       CleaningIssueStatus  @default(OPEN)
+  photo1       String?
+  photo2       String?
+  photo3       String?
+  resolvedById Int?
+  resolvedAt   DateTime?
+  resolverNote String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  area     CleaningArea @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  user     User         @relation("IssueReporter", fields: [userId], references: [id], onDelete: Cascade)
+  resolver User?        @relation("IssueResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
 }
 
 model ActivityLog {

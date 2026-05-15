@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
     <!-- Header -->
     <div class="relative bg-linear-to-r from-emerald-500 to-teal-600 dark:from-emerald-950 dark:to-teal-950 rounded-2xl px-6 py-5 mb-5 overflow-hidden shadow-md shadow-emerald-200 dark:shadow-black/20">
@@ -81,7 +81,7 @@
               class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-500/25 dark:shadow-black/30 border border-gray-200 dark:border-slate-700 overflow-hidden hover:shadow-md hover:border-emerald-200 transition-all">
               <!-- Photo cover -->
               <div class="h-36 relative overflow-hidden bg-emerald-50 dark:bg-emerald-900/20">
-                <img v-if="v.photo" :src="`${BASE_URL}/uploads/${v.photo}`" class="w-full h-full object-cover" />
+                <img v-if="v.photo" :src="photoUrl(v.photo)" class="w-full h-full object-cover" />
                 <div v-else class="w-full h-full flex items-center justify-center">
                   <TruckIcon class="w-12 h-12 text-emerald-200" />
                 </div>
@@ -125,7 +125,7 @@
                 class="bg-orange-50 dark:bg-orange-900/20 rounded-2xl border border-orange-200 dark:border-orange-800/50 overflow-hidden opacity-85">
                 <!-- Photo cover -->
                 <div class="h-36 relative overflow-hidden bg-orange-100 dark:bg-orange-900/30">
-                  <img v-if="v.photo" :src="`${BASE_URL}/uploads/${v.photo}`" class="w-full h-full object-cover grayscale-[30%]" />
+                  <img v-if="v.photo" :src="photoUrl(v.photo)" class="w-full h-full object-cover grayscale-[30%]" />
                   <div v-else class="w-full h-full flex items-center justify-center">
                     <TruckIcon class="w-12 h-12 text-orange-200" />
                   </div>
@@ -167,7 +167,7 @@
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div class="flex items-start gap-3">
                     <div class="w-12 h-12 rounded-xl overflow-hidden shrink-0 mt-0.5 border border-slate-100 dark:border-slate-700/50">
-                      <img v-if="b.vehicle.photo" :src="`${BASE_URL}/uploads/${b.vehicle.photo}`" class="w-full h-full object-cover" />
+                      <img v-if="b.vehicle.photo" :src="photoUrl(b.vehicle.photo)" class="w-full h-full object-cover" />
                       <div v-else class="w-full h-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
                         <TruckIcon class="w-5 h-5 text-amber-500" />
                       </div>
@@ -228,15 +228,18 @@
         <!-- Tab 3: ประวัติ -->
         <TabPanel>
           <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-500/25 dark:shadow-black/30 border border-gray-200 dark:border-slate-700 overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                <ClockIcon class="w-5 h-5 text-blue-500" /> ประวัติการเบิก/คืน
-              </h3>
-              <div class="relative w-full sm:w-56">
-                <MagnifyingGlassIcon class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input v-model="searchText" placeholder="ค้นหาทะเบียน, คนขับ, สถานที่..."
-                  class="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm transition hover:border-blue-400 dark:text-white dark:placeholder-slate-400" />
+            <div class="px-5 py-4 border-b border-gray-200 dark:border-slate-700 flex flex-col gap-3">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                  <ClockIcon class="w-5 h-5 text-blue-500" /> ประวัติการเบิก/คืน
+                </h3>
+                <div class="relative w-full sm:w-56">
+                  <MagnifyingGlassIcon class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input v-model="searchText" placeholder="ค้นหาทะเบียน, คนขับ, สถานที่..."
+                    class="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm transition hover:border-blue-400 dark:text-white dark:placeholder-slate-400" />
+                </div>
               </div>
+              <AppDateFilter default-mode="all" @change="onDateChange" />
             </div>
 
             <!-- Mobile -->
@@ -317,7 +320,7 @@
                 <!-- Selected vehicle info -->
                 <div v-if="selectedVehicle" class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 rounded-xl overflow-hidden flex items-center gap-3">
                   <div class="w-16 h-16 shrink-0 overflow-hidden">
-                    <img v-if="selectedVehicle.photo" :src="`${BASE_URL}/uploads/${selectedVehicle.photo}`" class="w-full h-full object-cover" />
+                    <img v-if="selectedVehicle.photo" :src="photoUrl(selectedVehicle.photo)" class="w-full h-full object-cover" />
                     <div v-else class="w-full h-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
                       <TruckIcon class="w-6 h-6 text-emerald-500" />
                     </div>
@@ -374,8 +377,8 @@
     </TransitionRoot>
 
     <!-- Detail Modal -->
-    <TransitionRoot :show="!!detailBooking" as="template">
-      <Dialog @close="detailBooking = null" class="relative z-50">
+    <TransitionRoot :show="showDetail" as="template">
+      <Dialog @close="closeDetail" class="relative z-50">
         <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
           <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" />
         </TransitionChild>
@@ -387,7 +390,7 @@
                 <DialogTitle class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
                   <ClockIcon class="w-5 h-5 text-blue-500" /> รายละเอียดการใช้งาน
                 </DialogTitle>
-                <button @click="detailBooking = null" class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"><XMarkIcon class="w-5 h-5 text-slate-400" /></button>
+                <button @click="closeDetail" class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"><XMarkIcon class="w-5 h-5 text-slate-400" /></button>
               </div>
               <div class="p-5 space-y-4">
                 <!-- Info -->
@@ -657,12 +660,13 @@ import {
 } from '@heroicons/vue/24/outline'
 import AppSelect from '../components/AppSelect.vue'
 import AppEmpty from '../components/AppEmpty.vue'
+import AppDateFilter from '../components/AppDateFilter.vue'
 import api from '../stores/api'
 import { fmtDateTh, fmtDateTimeTh } from '../stores/date'
 import { auth } from '../stores/auth'
 import { swalSuccess, swalError } from '../stores/swal'
 
-const BASE_URL = `http://${window.location.hostname}:8099`
+const BASE_URL = ``
 
 const bookings = ref([])
 const availableVehicles = ref([])
@@ -689,8 +693,11 @@ const lightboxPhoto = ref(null)
 
 function photoUrl(filename) {
   if (!filename) return null
+  const base = api.defaults.baseURL.replace('/api', '')
+  if (filename.startsWith('https://')) return `${base}/api/media/proxy?url=${encodeURIComponent(filename)}`
   if (filename.startsWith('http')) return filename
-  return api.defaults.baseURL.replace('/api', '') + '/uploads/' + filename
+  if (filename.startsWith('/')) return base + filename
+  return base + '/uploads/' + filename
 }
 
 const coForm = ref({ vehicleId: '', requesterId: '', driverId: '', destination: '', purpose: '', mileageOut: '', photo: null })
@@ -740,10 +747,23 @@ const requesterOptions = computed(() =>
   users.value.map(u => ({ value: u.id, label: `${u.displayName || u.username} (${u.role})` }))
 )
 
+const filterStart = ref('')
+const filterEnd = ref('')
+
+function onDateChange({ startDate, endDate }) {
+  filterStart.value = startDate
+  filterEnd.value = endDate
+}
+
 const filteredHistory = computed(() => {
-  if (!searchText.value) return historyBookings.value
+  let list = historyBookings.value
+  if (filterStart.value) {
+    const s = new Date(filterStart.value), e = new Date((filterEnd.value || filterStart.value) + 'T23:59:59')
+    list = list.filter(b => { const d = new Date(b.checkoutDate); return d >= s && d <= e })
+  }
+  if (!searchText.value) return list
   const q = searchText.value.toLowerCase()
-  return historyBookings.value.filter(b =>
+  return list.filter(b =>
     b.vehicle.licensePlate.toLowerCase().includes(q) ||
     b.destination.toLowerCase().includes(q) ||
     (b.driver.displayName || b.driver.username).toLowerCase().includes(q) ||
@@ -809,8 +829,10 @@ function openApproveReturn(b) {
   showApprove.value = true
 }
 
+const showDetail = ref(false)
 const detailBooking = ref(null)
-function viewDetail(b) { detailBooking.value = b }
+function viewDetail(b) { detailBooking.value = b; showDetail.value = true }
+function closeDetail() { showDetail.value = false }
 
 async function doCheckout() {
   const vid = selectedVehicle.value ? selectedVehicle.value.id : coForm.value.vehicleId

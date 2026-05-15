@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
     <div class="relative bg-linear-to-r from-amber-500 to-orange-500 dark:from-amber-950 dark:to-orange-950 rounded-2xl px-6 py-5 mb-5 overflow-hidden shadow-md shadow-amber-200 dark:shadow-black/20">
       <div class="absolute -top-6 -right-6 w-28 h-28 bg-white/10 rounded-full pointer-events-none"></div>
@@ -15,16 +15,22 @@
 
     <!-- Filter -->
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-500/25 dark:shadow-black/30 border border-gray-200 dark:border-slate-700 p-4 sm:p-5 mb-4">
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div><label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5">จากวันที่</label>
-          <input v-model="bk.startDate" type="date" class="w-full px-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none dark:bg-slate-700 dark:text-white" /></div>
-        <div><label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5">ถึงวันที่</label>
-          <input v-model="bk.endDate" type="date" class="w-full px-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none dark:bg-slate-700 dark:text-white" /></div>
-        <div><label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5">ยานพาหนะ</label>
-          <AppMultiSelect v-model="bk.vehicleIds" :options="vehicleOptions" placeholder="ทั้งหมด" :icon="TruckIcon" /></div>
-        <div><label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5">สถานะ</label>
-          <AppSelect v-model="bk.status" :options="bkStatusOptions" placeholder="ทั้งหมด" :icon="FunnelIcon" /></div>
-        <div class="flex items-end gap-2 col-span-2 sm:col-span-1">
+      <div class="flex flex-col gap-3">
+        <div class="flex flex-wrap items-start gap-3">
+          <div class="w-full">
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5">ช่วงเวลา</label>
+            <AppDateFilter default-mode="month" @change="({ startDate, endDate }) => { bk.startDate = startDate; bk.endDate = endDate }" />
+          </div>
+          <div class="flex-1 min-w-40">
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5">ยานพาหนะ</label>
+            <AppMultiSelect v-model="bk.vehicleIds" :options="vehicleOptions" placeholder="ทั้งหมด" :icon="TruckIcon" />
+          </div>
+          <div class="flex-1 min-w-32">
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5">สถานะ</label>
+            <AppSelect v-model="bk.status" :options="bkStatusOptions" placeholder="ทั้งหมด" :icon="FunnelIcon" />
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
           <button @click="loadBookings" class="flex-1 bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 dark:from-amber-700 dark:to-orange-800 dark:hover:from-amber-800 dark:hover:to-orange-900 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-1.5">
             <MagnifyingGlassIcon class="w-4 h-4" /> ค้นหา
           </button>
@@ -98,11 +104,12 @@ import { ref, computed, onMounted } from 'vue'
 import { ArrowsRightLeftIcon, MagnifyingGlassIcon, TruckIcon, FunnelIcon, ArrowDownTrayIcon } from '@heroicons/vue/24/outline'
 import AppSelect from '../components/AppSelect.vue'
 import AppMultiSelect from '../components/AppMultiSelect.vue'
+import AppDateFilter from '../components/AppDateFilter.vue'
 import AppEmpty from '../components/AppEmpty.vue'
 import api from '../stores/api'
 import { fmtDateTh, fmtDateTimeTh } from '../stores/date'
 
-const BASE_URL = `http://${window.location.hostname}:8099`
+const BASE_URL = ``
 const vehicles = ref([])
 const vehicleOptions = computed(() => vehicles.value.map(v => ({ value: v.id, label: `${v.licensePlate} - ${v.type}` })))
 const bkStatusOptions = [{ value: 'CHECKED_OUT', label: 'กำลังใช้งาน' }, { value: 'RETURNED', label: 'คืนแล้ว' }, { value: 'CANCELLED', label: 'ยกเลิก' }]

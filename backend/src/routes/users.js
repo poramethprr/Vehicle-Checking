@@ -1,11 +1,10 @@
 const express = require('express')
 const router = express.Router()
 const bcrypt = require('bcryptjs')
-const path = require('path')
-const fs = require('fs')
 const prisma = require('../services/prisma')
 const { logActivity } = require('../services/logger')
-const upload = require('../middleware/upload')
+const { upload } = require('../middleware/upload')
+const { uploadToBlob, deleteFromBlob } = require('../services/azureBlob')
 
 function parseDateInput(value) {
   if (!value) return null
@@ -35,7 +34,7 @@ router.post('/', upload.single('licensePhoto'), async (req, res) => {
       role,
       licenseNumber: licenseNumber ? licenseNumber.trim() : null,
       licenseExpiry: parseDateInput(licenseExpiry),
-      licensePhoto: req.file ? req.file.filename : null
+      licensePhoto: req.file ? await uploadToBlob(req.file.buffer, req.file.originalname, 'license-') : null
     }
     if (req.body.password) {
       data.password = await bcrypt.hash(req.body.password, 10)
@@ -91,17 +90,10 @@ router.put('/:id', upload.single('licensePhoto'), async (req, res) => {
     }
 
     if (req.file) {
-      // Delete old photo if exists
-      if (existing.licensePhoto) {
-        const oldPath = path.join(__dirname, '..', '..', 'uploads', existing.licensePhoto)
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath)
-      }
-      data.licensePhoto = req.file.filename
+      if (existing.licensePhoto) deleteFromBlob(existing.licensePhoto).catch(() => {})
+      data.licensePhoto = await uploadToBlob(req.file.buffer, req.file.originalname, 'license-')
     } else if (removeLicensePhoto === 'true') {
-      if (existing.licensePhoto) {
-        const oldPath = path.join(__dirname, '..', '..', 'uploads', existing.licensePhoto)
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath)
-      }
+      if (existing.licensePhoto) deleteFromBlob(existing.licensePhoto).catch(() => {})
       data.licensePhoto = null
     }
 
@@ -127,10 +119,7 @@ router.delete('/:id', async (req, res) => {
     const { actionUserId } = req.body
     const user = await prisma.user.findUnique({ where: { id: Number(req.params.id) } })
 
-    if (user?.licensePhoto) {
-      const photoPath = path.join(__dirname, '..', '..', 'uploads', user.licensePhoto)
-      if (fs.existsSync(photoPath)) fs.unlinkSync(photoPath)
-    }
+    if (user?.licensePhoto) deleteFromBlob(user.licensePhoto).catch(() => {})
 
     await prisma.user.delete({ where: { id: Number(req.params.id) } })
 

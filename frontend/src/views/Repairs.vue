@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="space-y-6">
 
     <!-- Header -->
@@ -239,7 +239,7 @@
                       <BanknotesIcon class="w-3.5 h-3.5" />
                       วงเงิน: {{ Number(r.estimatedCost).toLocaleString('th-TH') }} บาท
                     </div>
-                    <a v-if="r.documentPath" :href="`${BASE_URL}/uploads/${r.documentPath}`" target="_blank"
+                    <a v-if="r.documentPath" :href="resolveUrl(r.documentPath)" target="_blank"
                       class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 px-2.5 py-1 rounded-lg transition">
                       <component :is="r.documentPath.endsWith('.pdf') ? DocumentTextIcon : PhotoIcon" class="w-3.5 h-3.5" />
                       ดูเอกสาร
@@ -281,11 +281,12 @@
                   {{ auth.isAdmin ? 'ประวัติทั้งหมด' : 'คำขอของฉัน' }}
                   <span class="text-sm font-normal text-slate-400 dark:text-slate-500">{{ histTotal }} รายการ</span>
                 </h2>
-                <div class="flex flex-col sm:flex-row gap-2">
-                  <div v-if="auth.isAdmin" class="w-full sm:w-52">
+                <div class="flex flex-wrap items-center gap-2">
+                  <AppDateFilter default-mode="all" @change="onDateChange" />
+                  <div v-if="auth.isAdmin" class="w-44">
                     <AppSelect v-model="filterVehicleId" :options="vehicleFilterOptions" :icon="TruckIcon" placeholder="ยานพาหนะทั้งหมด" />
                   </div>
-                  <div class="w-full sm:w-44">
+                  <div class="w-40">
                     <AppSelect v-model="filterStatus" :options="statusFilterOptions" :icon="AdjustmentsHorizontalIcon" placeholder="ทุกสถานะ" />
                   </div>
                 </div>
@@ -337,7 +338,7 @@
                       <BanknotesIcon class="w-3 h-3" />
                       {{ Number(r.estimatedCost).toLocaleString('th-TH') }} บาท
                     </div>
-                    <a v-if="r.documentPath" :href="`${BASE_URL}/uploads/${r.documentPath}`" target="_blank"
+                    <a v-if="r.documentPath" :href="resolveUrl(r.documentPath)" target="_blank"
                       class="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 px-2 py-0.5 rounded-lg transition font-medium">
                       <component :is="r.documentPath.endsWith('.pdf') ? DocumentTextIcon : PhotoIcon" class="w-3 h-3" />
                       ดูเอกสาร
@@ -571,14 +572,20 @@ import {
   UserCircleIcon
 } from '@heroicons/vue/24/outline'
 import AppSelect from '../components/AppSelect.vue'
+import AppDateFilter from '../components/AppDateFilter.vue'
 import api from '../stores/api'
 import { fmtDateTimeTh } from '../stores/date'
 import { auth } from '../stores/auth'
 import { swalSuccess, swalError, swalConfirm } from '../stores/swal'
 
-const BASE_URL = `http://${window.location.hostname}:8099`
-
+const BASE_URL = ``
 const PAGE_SIZE = 10
+function resolveUrl(val) {
+  if (!val) return null
+  if (val.startsWith('https://')) return `${BASE_URL}/api/media/proxy?url=${encodeURIComponent(val)}`
+  if (val.startsWith('http')) return val
+  return `${BASE_URL}/uploads/${val}`
+}
 
 const vehicles = ref([])
 const pendingRepairs = ref([])
@@ -587,9 +594,18 @@ const submitting = ref(false)
 const activeTab = ref(0)
 const filterStatus = ref('')
 const filterVehicleId = ref('')
+const filterStart = ref('')
+const filterEnd = ref('')
 const histPage = ref(1)
 const histTotal = ref(0)
 const histTotalPages = ref(0)
+
+function onDateChange({ startDate, endDate }) {
+  filterStart.value = startDate
+  filterEnd.value = endDate
+  histPage.value = 1
+  loadHistory()
+}
 
 const form = ref({ vehicleId: '', title: '', detail: '', estimatedCost: '', documentFile: null })
 const docPreview = ref(null)
@@ -665,6 +681,8 @@ async function loadHistory() {
   const params = { page: histPage.value, limit: PAGE_SIZE }
   if (filterStatus.value) params.status = filterStatus.value
   if (filterVehicleId.value) params.vehicleId = filterVehicleId.value
+  if (filterStart.value) params.startDate = filterStart.value
+  if (filterEnd.value) params.endDate = filterEnd.value
   if (!auth.isAdmin) params.userId = auth.user.id
   const res = await api.get('/repairs', { params })
   histRepairs.value = res.data.requests

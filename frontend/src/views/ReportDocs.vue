@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
     <div class="relative bg-linear-to-r from-emerald-500 to-teal-500 dark:from-emerald-950 dark:to-teal-950 rounded-2xl px-6 py-5 mb-5 overflow-hidden shadow-md shadow-emerald-200 dark:shadow-black/20">
       <div class="absolute -top-6 -right-6 w-28 h-28 bg-white/10 rounded-full pointer-events-none"></div>
@@ -115,7 +115,7 @@ import AppEmpty from '../components/AppEmpty.vue'
 import api from '../stores/api'
 import { fmtDateTh } from '../stores/date'
 
-const BASE_URL = `http://${window.location.hostname}:8099`
+const BASE_URL = ``
 const docFilterOptions = [{ value: 'expired', label: 'หมดอายุ' }, { value: 'warning', label: 'ใกล้หมด (≤30 วัน)' }, { value: 'ok', label: 'ปกติ' }]
 
 const vd = ref({ docFilter: '', search: '' })

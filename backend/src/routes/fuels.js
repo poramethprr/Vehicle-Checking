@@ -1,30 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const path = require('path')
-const fs = require('fs')
-const multer = require('multer')
 const prisma = require('../services/prisma')
 const { logActivity } = require('../services/logger')
-
-const uploadDir = path.join(__dirname, '..', '..', 'uploads')
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true })
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname)
-    cb(null, `fuel-${Date.now()}-${file.fieldname}-${Math.random().toString(36).slice(2, 6)}${ext}`)
-  }
-})
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 20 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (/\.(jpg|jpeg|png|gif|webp)$/i.test(path.extname(file.originalname))) cb(null, true)
-    else cb(new Error('อนุญาตเฉพาะไฟล์รูปภาพ'))
-  }
-})
+const { upload } = require('../middleware/upload')
+const { uploadToBlob, deleteFromBlob } = require('../services/azureBlob')
 
 const PHOTO_FIELDS = [
   { name: 'mileagePhotoBefore', maxCount: 1 },
@@ -93,7 +72,10 @@ router.post('/', upload.fields(PHOTO_FIELDS), async (req, res) => {
     }
 
     for (const f of PHOTO_FIELDS) {
-      if (files[f.name]?.[0]) data[f.name] = files[f.name][0].filename
+      if (files[f.name]?.[0]) {
+        const file = files[f.name][0]
+        data[f.name] = await uploadToBlob(file.buffer, file.originalname, `fuel-${f.name}-`)
+      }
     }
 
     const log = await prisma.fuelLog.create({ data, include: INCLUDE })
@@ -112,10 +94,7 @@ router.delete('/:id', async (req, res) => {
     if (!log) return res.status(404).json({ error: 'ไม่พบข้อมูล' })
 
     for (const f of PHOTO_FIELDS) {
-      if (log[f.name]) {
-        const p = path.join(uploadDir, log[f.name])
-        if (fs.existsSync(p)) fs.unlinkSync(p)
-      }
+      if (log[f.name]) deleteFromBlob(log[f.name]).catch(() => {})
     }
 
     await prisma.fuelLog.delete({ where: { id: Number(req.params.id) } })

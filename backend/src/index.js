@@ -14,6 +14,11 @@ const renewalRoutes = require('./routes/renewals')
 const repairRoutes = require('./routes/repairs')
 const fuelRoutes = require('./routes/fuels')
 const accidentRoutes = require('./routes/accidents')
+const mediaRoutes = require('./routes/media')
+const maidAreasRoutes = require('./routes/maid-areas')
+const maidLogsRoutes = require('./routes/maid-logs')
+const maidIssuesRoutes = require('./routes/maid-issues')
+const maidExportRoutes = require('./routes/maid-export')
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -36,6 +41,11 @@ app.use('/api/renewals', renewalRoutes)
 app.use('/api/repairs', repairRoutes)
 app.use('/api/fuels', fuelRoutes)
 app.use('/api/accidents', accidentRoutes)
+app.use('/api/media', mediaRoutes)
+app.use('/api/maid/areas', maidAreasRoutes)
+app.use('/api/maid/logs', maidLogsRoutes)
+app.use('/api/maid/issues', maidIssuesRoutes)
+app.use('/api/maid/export', maidExportRoutes)
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' })

@@ -2,7 +2,8 @@ const express = require('express')
 const router = express.Router()
 const prisma = require('../services/prisma')
 const { logActivity } = require('../services/logger')
-const upload = require('../middleware/upload')
+const { upload } = require('../middleware/upload')
+const { uploadToBlob } = require('../services/azureBlob')
 
 const BOOKING_INCLUDE = {
   vehicle: { select: { id: true, type: true, licensePlate: true, photo: true } },
@@ -97,7 +98,7 @@ router.post('/checkout', upload.single('mileageOutPhoto'), async (req, res) => {
         destination,
         purpose: purpose || null,
         mileageOut: Number(mileageOut),
-        mileageOutPhoto: req.file ? `/uploads/${req.file.filename}` : null
+        mileageOutPhoto: req.file ? await uploadToBlob(req.file.buffer, req.file.originalname, 'mileage-out-') : null
       },
       include: BOOKING_INCLUDE
     })
@@ -110,6 +111,57 @@ router.post('/checkout', upload.single('mileageOutPhoto'), async (req, res) => {
     await logActivity(
       Number(requesterId), 'CHECKOUT_VEHICLE',
       `เบิกรถ ${booking.vehicle.licensePlate} ไป ${destination} คนขับ: ${booking.driver.username} ไมล์: ${mileageOut}`,
+      'Booking', booking.id
+    )
+
+    res.json(booking)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Direct return (คืนรถโดยตรง — Admin only)
+router.put('/return/:id', upload.single('mileageInPhoto'), async (req, res) => {
+  try {
+    const { mileageIn, returnNote, userId } = req.body
+    const bookingId = Number(req.params.id)
+
+    if (!mileageIn) return res.status(400).json({ error: 'กรุณากรอกเลขไมล์ตอนคืน' })
+
+    const existing = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { vehicle: { select: { licensePlate: true } } }
+    })
+    if (!existing) return res.status(404).json({ error: 'ไม่พบข้อมูลการเบิก' })
+    if (existing.status !== 'CHECKED_OUT') return res.status(400).json({ error: 'รถคันนี้คืนแล้ว' })
+
+    const mileageInNum = Number(mileageIn)
+    const distance = mileageInNum - existing.mileageOut
+
+    const photoUrl = req.file ? await uploadToBlob(req.file.buffer, req.file.originalname, 'mileage-in-') : null
+
+    const booking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        status: 'RETURNED',
+        returnDate: new Date(),
+        mileageIn: mileageInNum,
+        mileageInPhoto: photoUrl,
+        distance,
+        returnNote: returnNote || null
+      },
+      include: BOOKING_INCLUDE
+    })
+
+    await prisma.vehicle.update({
+      where: { id: existing.vehicleId },
+      data: { status: 'ACTIVE', currentMileage: mileageInNum }
+    })
+
+    const uid = userId ? Number(userId) : existing.requesterId
+    await logActivity(
+      uid, 'RETURN_VEHICLE',
+      `คืนรถ ${existing.vehicle.licensePlate} ไมล์: ${mileageInNum} ระยะทาง: ${distance} กม.`,
       'Booking', booking.id
     )
 
@@ -136,7 +188,7 @@ router.put('/return-request/:id', upload.single('pendingMileageInPhoto'), async 
       where: { id: bookingId },
       data: {
         pendingMileageIn: Number(pendingMileageIn),
-        pendingMileageInPhoto: req.file ? `/uploads/${req.file.filename}` : null,
+        pendingMileageInPhoto: req.file ? await uploadToBlob(req.file.buffer, req.file.originalname, 'mileage-in-') : null,
         pendingReturnNote: pendingReturnNote || null,
         returnRequestedAt: new Date(),
         returnRequestedById: Number(userId)

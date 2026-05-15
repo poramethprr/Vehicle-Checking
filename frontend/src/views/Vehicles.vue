@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
     <div class="relative bg-linear-to-r from-blue-600 to-cyan-600 dark:from-blue-950 dark:to-cyan-950 rounded-2xl px-6 py-5 mb-6 overflow-hidden shadow-md shadow-blue-200 dark:shadow-black/20">
       <div class="absolute -top-6 -right-6 w-28 h-28 bg-white/10 rounded-full pointer-events-none"></div>
@@ -72,7 +72,7 @@
         <div v-for="v in paginatedVehicles" :key="v.id" class="px-4 py-3.5">
           <div class="flex items-center gap-3 mb-2">
             <div class="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-700/50">
-              <img v-if="v.photo" :src="`${BASE_URL}/uploads/${v.photo}`" class="w-full h-full object-cover" />
+              <img v-if="v.photo" :src="resolveUrl(v.photo)" class="w-full h-full object-cover" />
               <div v-else :class="statusColor(v.status)" class="w-full h-full flex items-center justify-center">
                 <TruckIcon class="w-5 h-5" />
               </div>
@@ -149,7 +149,7 @@
                 <td class="py-3 px-4">
                   <div class="flex items-center gap-2.5">
                     <div class="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-700/50">
-                      <img v-if="v.photo" :src="`${BASE_URL}/uploads/${v.photo}`" class="w-full h-full object-cover" />
+                      <img v-if="v.photo" :src="resolveUrl(v.photo)" class="w-full h-full object-cover" />
                       <div v-else :class="statusColor(v.status)" class="w-full h-full flex items-center justify-center">
                         <TruckIcon class="w-4 h-4" />
                       </div>
@@ -376,7 +376,7 @@
               <div class="p-5 space-y-4" v-if="detailVehicle">
                 <!-- รูปยานพาหนะ -->
                 <div v-if="detailVehicle.photo" class="rounded-xl overflow-hidden border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-700 max-h-48">
-                  <img :src="`${BASE_URL}/uploads/${detailVehicle.photo}`" class="w-full h-full object-cover" />
+                  <img :src="resolveUrl(detailVehicle.photo)" class="w-full h-full object-cover" />
                 </div>
                 <div class="flex items-center gap-3 mb-2">
                   <div :class="statusColor(detailVehicle.status)"
@@ -733,7 +733,13 @@ const BoolItem = {
   }
 }
 
-const BASE_URL = `http://${window.location.hostname}:8099`
+const BASE_URL = ``
+function resolveUrl(val) {
+  if (!val) return null
+  if (val.startsWith('https://')) return `${BASE_URL}/api/media/proxy?url=${encodeURIComponent(val)}`
+  if (val.startsWith('http')) return val
+  return `${BASE_URL}/uploads/${val}`
+}
 
 const PROVINCES = [
   'กรุงเทพมหานคร','กระบี่','กาญจนบุรี','กาฬสินธุ์','กำแพงเพชร','ขอนแก่น','จันทบุรี','ฉะเชิงเทรา',
@@ -951,7 +957,7 @@ function openForm(v) {
   photoFile.value = null
   if (v) {
     editingVehicle.value = v
-    photoPreview.value = v.photo ? `${BASE_URL}/uploads/${v.photo}` : null
+    photoPreview.value = v.photo ? resolveUrl(v.photo) : null
     const f = defaultForm()
     for (const key of Object.keys(f)) {
       if (v[key] !== undefined && v[key] !== null) {

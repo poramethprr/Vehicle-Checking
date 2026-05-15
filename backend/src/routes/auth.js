@@ -12,7 +12,10 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'กรุณากรอกข้อมูลให้ครบถ้วน' })
     }
 
-    const validCode = role === 'ADMIN' ? process.env.REG_CODE_ADMIN : process.env.REG_CODE_STAFF
+    const validCode = role === 'ADMIN' ? process.env.REG_CODE_ADMIN
+      : role === 'MANAGER' ? process.env.REG_CODE_MANAGER
+      : role === 'MAID' ? process.env.REG_CODE_MAID
+      : process.env.REG_CODE_STAFF
     if (regCode !== validCode) {
       return res.status(401).json({ error: 'รหัสสมัครสมาชิกไม่ถูกต้องสำหรับบทบาทนี้' })
     }

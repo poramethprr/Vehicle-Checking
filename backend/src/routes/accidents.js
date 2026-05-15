@@ -1,30 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const path = require('path')
-const fs = require('fs')
-const multer = require('multer')
 const prisma = require('../services/prisma')
 const { logActivity } = require('../services/logger')
-
-const uploadDir = path.join(__dirname, '..', '..', 'uploads')
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true })
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname)
-    cb(null, `accident-${Date.now()}-${file.fieldname}-${Math.random().toString(36).slice(2, 6)}${ext}`)
-  }
-})
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 20 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (/\.(jpg|jpeg|png|gif|webp)$/i.test(path.extname(file.originalname))) cb(null, true)
-    else cb(new Error('อนุญาตเฉพาะไฟล์รูปภาพ'))
-  }
-})
+const { upload } = require('../middleware/upload')
+const { uploadToBlob, deleteFromBlob } = require('../services/azureBlob')
 
 const PHOTO_FIELDS = [
   { name: 'photo1', maxCount: 1 },
@@ -43,9 +22,14 @@ const INCLUDE = {
 // GET / — list with pagination
 router.get('/', async (req, res) => {
   try {
-    const { vehicleId, page = 1, limit = 10 } = req.query
+    const { vehicleId, startDate, endDate, page = 1, limit = 10 } = req.query
     const where = {}
     if (vehicleId) where.vehicleId = Number(vehicleId)
+    if (startDate || endDate) {
+      where.createdAt = {}
+      if (startDate) where.createdAt.gte = new Date(startDate)
+      if (endDate) where.createdAt.lte = new Date(endDate + 'T23:59:59')
+    }
 
     const [reports, total] = await Promise.all([
       prisma.accidentReport.findMany({
@@ -83,7 +67,10 @@ router.post('/', upload.fields(PHOTO_FIELDS), async (req, res) => {
     }
 
     for (const f of PHOTO_FIELDS) {
-      if (files[f.name]?.[0]) data[f.name] = files[f.name][0].filename
+      if (files[f.name]?.[0]) {
+        const file = files[f.name][0]
+        data[f.name] = await uploadToBlob(file.buffer, file.originalname, `accident-${f.name}-`)
+      }
     }
 
     const report = await prisma.accidentReport.create({ data, include: INCLUDE })
@@ -102,10 +89,7 @@ router.delete('/:id', async (req, res) => {
     if (!report) return res.status(404).json({ error: 'ไม่พบข้อมูล' })
 
     for (const f of PHOTO_FIELDS) {
-      if (report[f.name]) {
-        const p = path.join(uploadDir, report[f.name])
-        if (fs.existsSync(p)) fs.unlinkSync(p)
-      }
+      if (report[f.name]) deleteFromBlob(report[f.name]).catch(() => {})
     }
 
     await prisma.accidentReport.delete({ where: { id: Number(req.params.id) } })

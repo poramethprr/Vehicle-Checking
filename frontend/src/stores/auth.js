@@ -28,23 +28,39 @@ export const auth = reactive({
     return this.user?.role === 'ADMIN'
   },
 
+  get isManager() {
+    return this.user?.role === 'MANAGER'
+  },
+
+  get isAdminOrManager() {
+    return ['ADMIN', 'MANAGER'].includes(this.user?.role)
+  },
+
   get isStaff() {
     return this.user?.role === 'STAFF'
   },
 
+  get isMaid() {
+    return this.user?.role === 'MAID'
+  },
+
   get canManageVehicles() {
-    return ['ADMIN', 'STAFF'].includes(this.user?.role)
+    return ['ADMIN', 'MANAGER', 'STAFF'].includes(this.user?.role)
   },
 
   get canManageUsers() {
-    return this.user?.role === 'ADMIN'
+    return ['ADMIN', 'MANAGER'].includes(this.user?.role)
   },
 
   get canCheckoutVehicles() {
-    return ['ADMIN', 'STAFF'].includes(this.user?.role)
+    return ['ADMIN', 'MANAGER', 'STAFF'].includes(this.user?.role)
   },
 
   get canViewReports() {
-    return ['ADMIN', 'STAFF'].includes(this.user?.role)
+    return ['ADMIN', 'MANAGER', 'STAFF'].includes(this.user?.role)
+  },
+
+  get canAccessMaid() {
+    return ['ADMIN', 'MAID'].includes(this.user?.role)
   }
 })

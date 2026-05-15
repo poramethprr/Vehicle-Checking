@@ -111,7 +111,7 @@
         <router-link v-for="v in pagedVehicles" :key="v.id" to="/vehicles"
           class="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
           <div class="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-700 shrink-0">
-            <img v-if="v.photo" :src="`http://${hostname}:8099/uploads/${v.photo}`" class="w-full h-full object-cover" />
+            <img v-if="v.photo" :src="resolveUrl(v.photo)" class="w-full h-full object-cover" />
             <div v-else class="w-full h-full flex items-center justify-center">
               <TruckIcon class="w-5 h-5 text-slate-400 dark:text-slate-500" />
             </div>
@@ -166,7 +166,7 @@
           <div v-if="bk.items.length" class="divide-y divide-gray-50 dark:divide-slate-700">
             <div v-for="b in bk.items" :key="b.id" class="flex items-center gap-3 px-4 py-3">
               <div class="w-9 h-9 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-700 shrink-0">
-                <img v-if="b.vehicle.photo" :src="`http://${hostname}:8099/uploads/${b.vehicle.photo}`" class="w-full h-full object-cover" />
+                <img v-if="b.vehicle.photo" :src="resolveUrl(b.vehicle.photo)" class="w-full h-full object-cover" />
                 <div v-else class="w-full h-full flex items-center justify-center"><TruckIcon class="w-4 h-4 text-slate-400 dark:text-slate-500" /></div>
               </div>
               <div class="flex-1 min-w-0">
@@ -424,6 +424,12 @@ import api from '../stores/api'
 import { fmtDateTh } from '../stores/date'
 
 const hostname = window.location.hostname
+function resolveUrl(val) {
+  if (!val) return null
+  if (val.startsWith('https://')) return `http://${hostname}:8099/api/media/proxy?url=${encodeURIComponent(val)}`
+  if (val.startsWith('http')) return val
+  return `http://${hostname}:8099/uploads/${val}`
+}
 const PER_PAGE = 5
 
 // ─── State ───────────────────────────────────────────────────────────────────

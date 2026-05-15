@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
     <div class="relative bg-linear-to-r from-violet-600 to-purple-600 dark:from-violet-950 dark:to-purple-950 rounded-2xl px-6 py-5 mb-5 overflow-hidden shadow-md shadow-violet-200 dark:shadow-black/20">
       <div class="absolute -top-6 -right-6 w-28 h-28 bg-white/10 rounded-full pointer-events-none"></div>
@@ -15,29 +15,30 @@
 
     <!-- Filter -->
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-500/25 dark:shadow-black/30 border border-gray-200 dark:border-slate-700 p-4 sm:p-5 mb-4">
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div>
-          <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5"><CalendarDaysIcon class="w-3.5 h-3.5 inline -mt-0.5 mr-0.5" /> เดือน</label>
-          <AppSelect v-model="ins.month" :options="monthOptions" :allow-empty="false" :icon="CalendarDaysIcon" />
+      <div class="flex flex-col gap-3">
+        <div class="flex flex-wrap items-start gap-3">
+          <div class="w-full">
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5">ช่วงเวลา</label>
+            <AppDateFilter default-mode="month" @change="onDateChange" />
+          </div>
+          <div class="flex-1 min-w-40">
+            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5"><TruckIcon class="w-3.5 h-3.5 inline -mt-0.5 mr-0.5" /> ยานพาหนะ</label>
+            <AppMultiSelect v-model="ins.vehicleIds" :options="vehicleOptions" placeholder="ทั้งหมด" :icon="TruckIcon" />
+          </div>
         </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5"><CalendarIcon class="w-3.5 h-3.5 inline -mt-0.5 mr-0.5" /> ปี</label>
-          <AppSelect v-model="ins.year" :options="yearOptions" :allow-empty="false" :icon="CalendarIcon" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5"><TruckIcon class="w-3.5 h-3.5 inline -mt-0.5 mr-0.5" /> ยานพาหนะ</label>
-          <AppMultiSelect v-model="ins.vehicleIds" :options="vehicleOptions" placeholder="ทั้งหมด" :icon="TruckIcon" />
-        </div>
-        <div class="flex items-end gap-2 col-span-2 sm:col-span-1">
-          <button @click="loadInspections" class="flex-1 bg-linear-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 dark:from-violet-700 dark:to-purple-800 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-1.5">
+        <div class="flex items-center gap-2">
+          <button @click="loadInspections" class="bg-linear-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 dark:from-violet-700 dark:to-purple-800 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition shadow-sm flex items-center gap-1.5">
             <MagnifyingGlassIcon class="w-4 h-4" /> ค้นหา
           </button>
-          <button @click="exportInspections('excel')" class="bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-700 dark:hover:bg-emerald-800 text-white font-semibold px-3 py-2.5 rounded-xl text-sm transition shadow-sm flex items-center gap-1.5">
+          <button @click="exportInspections('excel')" :disabled="!ins.month || !ins.vehicleIds.length"
+            class="bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-emerald-700 dark:hover:bg-emerald-800 text-white font-semibold px-3 py-2.5 rounded-xl text-sm transition shadow-sm flex items-center gap-1.5">
             <ArrowDownTrayIcon class="w-4 h-4" /><span class="hidden sm:inline">Excel</span>
           </button>
-          <button @click="exportInspections('pdf')" class="bg-red-500 hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-800 text-white font-semibold px-3 py-2.5 rounded-xl text-sm transition shadow-sm flex items-center gap-1.5">
+          <button @click="exportInspections('pdf')" :disabled="!ins.month || !ins.vehicleIds.length"
+            class="bg-red-500 hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-red-700 dark:hover:bg-red-800 text-white font-semibold px-3 py-2.5 rounded-xl text-sm transition shadow-sm flex items-center gap-1.5">
             <DocumentArrowDownIcon class="w-4 h-4" /><span class="hidden sm:inline">PDF</span>
           </button>
+          <span v-if="!ins.month" class="text-xs text-amber-600 dark:text-amber-400">Excel/PDF ต้องเลือกรายเดือน</span>
         </div>
       </div>
     </div>
@@ -148,13 +149,14 @@ import {
 import AppSelect from '../components/AppSelect.vue'
 import AppMultiSelect from '../components/AppMultiSelect.vue'
 import AppEmpty from '../components/AppEmpty.vue'
+import AppDateFilter from '../components/AppDateFilter.vue'
 import api from '../stores/api'
 import { swalError } from '../stores/swal'
 import { useRouter } from 'vue-router'
 import { toLocalDateStr, fmtDateTh } from '../stores/date'
 
 const router = useRouter()
-const BASE_URL = `http://${window.location.hostname}:8099`
+const BASE_URL = ``
 
 const now = new Date()
 const thaiMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม']
@@ -165,7 +167,22 @@ const insStatusOptions = [{ value: 'ALL_NORMAL', label: 'ปกติทั้�
 const vehicles = ref([])
 const vehicleOptions = computed(() => vehicles.value.map(v => ({ value: v.id, label: `${v.licensePlate} - ${v.type}` })))
 
-const ins = ref({ month: now.getMonth() + 1, year: now.getFullYear(), vehicleIds: [], search: '', statusFilter: '', searched: false })
+const ins = ref({ month: now.getMonth() + 1, year: now.getFullYear(), startDate: null, endDate: null, vehicleIds: [], search: '', statusFilter: '', searched: false })
+
+function onDateChange({ startDate, endDate }) {
+  ins.value.startDate = startDate
+  ins.value.endDate = endDate
+  if (startDate) {
+    const d = new Date(startDate)
+    ins.value.year = d.getFullYear()
+    // month mode: startDate and endDate are in the same month
+    const dEnd = new Date(endDate)
+    ins.value.month = d.getMonth() === dEnd.getMonth() ? d.getMonth() + 1 : null
+  } else {
+    ins.value.month = null
+    ins.value.year = null
+  }
+}
 const inspections = ref([])
 const selectedInspection = ref(null)
 
@@ -185,7 +202,11 @@ const filteredInspections = computed(() => {
 })
 
 async function loadInspections() {
-  const params = new URLSearchParams({ month: ins.value.month, year: ins.value.year })
+  const params = new URLSearchParams()
+  if (ins.value.month) params.set('month', ins.value.month)
+  if (ins.value.year)  params.set('year',  ins.value.year)
+  if (ins.value.startDate && !ins.value.month) params.set('startDate', ins.value.startDate)
+  if (ins.value.endDate   && !ins.value.month) params.set('endDate',   ins.value.endDate)
   ins.value.vehicleIds.forEach(id => params.append('vehicleId', id))
   inspections.value = (await api.get('/inspections', { params })).data
   ins.value.searched = true

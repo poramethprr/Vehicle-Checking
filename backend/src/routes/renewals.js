@@ -1,34 +1,10 @@
 const express = require('express')
 const router = express.Router()
-const path = require('path')
-const fs = require('fs')
-const multer = require('multer')
 const prisma = require('../services/prisma')
 const { logActivity } = require('../services/logger')
+const { uploadWithPdf } = require('../middleware/upload')
+const { uploadToBlob, deleteFromBlob } = require('../services/azureBlob')
 
-// Custom multer: accept images + PDF
-const uploadDir = path.join(__dirname, '..', '..', 'uploads')
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true })
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname)
-    cb(null, `renewal-${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`)
-  }
-})
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 20 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    const allowed = /\.(jpg|jpeg|png|gif|webp|pdf)$/i
-    if (allowed.test(path.extname(file.originalname))) cb(null, true)
-    else cb(new Error('อนุญาตเฉพาะไฟล์รูปภาพและ PDF'))
-  }
-})
-
-// vehicle field ที่ต้องอัพเดทตาม type
 const EXPIRY_FIELD = { PRB: 'prbExpiry', TAX: 'taxRenewalDate', INS: 'insExpiry' }
 
 function parseDateUTC(value) {
@@ -41,10 +17,15 @@ function parseDateUTC(value) {
 // GET / — list renewals
 router.get('/', async (req, res) => {
   try {
-    const { vehicleId, type, page = 1, limit = 50 } = req.query
+    const { vehicleId, type, startDate, endDate, page = 1, limit = 50 } = req.query
     const where = {}
     if (vehicleId) where.vehicleId = Number(vehicleId)
     if (type) where.type = type
+    if (startDate || endDate) {
+      where.createdAt = {}
+      if (startDate) where.createdAt.gte = new Date(startDate)
+      if (endDate) where.createdAt.lte = new Date(endDate + 'T23:59:59')
+    }
 
     const [renewals, total] = await Promise.all([
       prisma.vehicleRenewal.findMany({
@@ -66,7 +47,7 @@ router.get('/', async (req, res) => {
 })
 
 // POST / — create renewal + update vehicle expiry
-router.post('/', upload.single('document'), async (req, res) => {
+router.post('/', uploadWithPdf.single('document'), async (req, res) => {
   try {
     const { vehicleId, userId, type, provider, expiryDate, note } = req.body
     if (!vehicleId || !userId || !type || !expiryDate) {
@@ -79,7 +60,6 @@ router.post('/', upload.single('document'), async (req, res) => {
     const vehicleField = EXPIRY_FIELD[type]
     if (!vehicleField) return res.status(400).json({ error: 'ประเภทไม่ถูกต้อง' })
 
-    // Create renewal record
     const renewal = await prisma.vehicleRenewal.create({
       data: {
         vehicleId: Number(vehicleId),
@@ -87,7 +67,7 @@ router.post('/', upload.single('document'), async (req, res) => {
         type,
         provider: provider || null,
         expiryDate: expiry,
-        documentPath: req.file ? req.file.filename : null,
+        documentPath: req.file ? await uploadToBlob(req.file.buffer, req.file.originalname, `renewal-${type.toLowerCase()}-`) : null,
         note: note || null
       },
       include: {
@@ -96,7 +76,6 @@ router.post('/', upload.single('document'), async (req, res) => {
       }
     })
 
-    // Update vehicle expiry field
     await prisma.vehicle.update({
       where: { id: Number(vehicleId) },
       data: { [vehicleField]: expiry }
@@ -121,11 +100,7 @@ router.delete('/:id', async (req, res) => {
     })
     if (!renewal) return res.status(404).json({ error: 'ไม่พบข้อมูล' })
 
-    // Delete file if exists
-    if (renewal.documentPath) {
-      const filePath = path.join(uploadDir, renewal.documentPath)
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
-    }
+    if (renewal.documentPath) deleteFromBlob(renewal.documentPath).catch(() => {})
 
     await prisma.vehicleRenewal.delete({ where: { id: Number(req.params.id) } })
 
