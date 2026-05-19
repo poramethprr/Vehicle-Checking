@@ -14,12 +14,12 @@ export default defineConfig({
     }
   },
   server: {
-    port: 3099,
+    port: 3007,
     host: '0.0.0.0',
     https: true,
     proxy: {
-      '/api': { target: 'http://localhost:8099', changeOrigin: true },
-      '/uploads': { target: 'http://localhost:8099', changeOrigin: true }
+      '/api': { target: 'http://localhost:8007', changeOrigin: true },
+      '/uploads': { target: 'http://localhost:8007', changeOrigin: true }
     }
   }
 })

@@ -8,7 +8,7 @@
         </div>
         <div>
           <h1 class="text-lg sm:text-xl font-bold text-white">รายงานเอกสารยานพาหนะ</h1>
-          <p class="text-emerald-100 text-xs mt-0.5">ติดตามสถานะ พ.ร.บ. ภาษี และประกันของยานพาหนะ</p>
+          <p class="text-emerald-100 text-xs mt-0.5">ติดตามสถานะ พ.ร.บ. ภาษี ประกัน และแก๊สของยานพาหนะ</p>
         </div>
       </div>
     </div>
@@ -56,6 +56,8 @@
             <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">ภาษี</th>
             <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">ประกัน</th>
             <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">เบอร์ประกัน</th>
+            <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">แก๊ส</th>
+            <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">เบอร์แก๊ส</th>
           </tr></thead>
           <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
             <tr v-for="v in filteredVehicleDocs" :key="v.id" class="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition">
@@ -87,6 +89,20 @@
                 <a v-if="v.insContact" :href="`tel:${v.insContact}`" class="hover:underline flex items-center gap-1"><PhoneIcon class="w-3 h-3" />{{ v.insContact }}</a>
                 <span v-else class="text-slate-300 dark:text-slate-600">-</span>
               </td>
+              <td class="py-3 px-4 text-center">
+                <div class="flex flex-col items-center gap-0.5">
+                  <div class="flex gap-1 mb-0.5">
+                    <span v-if="v.gasNgv" class="text-[9px] font-bold bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded">NGV</span>
+                    <span v-if="v.gasLpg" class="text-[9px] font-bold bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded">LPG</span>
+                  </div>
+                  <span :class="expiryChip(v.gasExpiry)" class="text-[10px] font-semibold px-2 py-0.5 rounded-md whitespace-nowrap">{{ expiryLabel(v.gasExpiry) }}</span>
+                  <span class="text-[10px] text-slate-400 dark:text-slate-500">{{ v.gasExpiry ? fmtD(v.gasExpiry) : '' }}</span>
+                </div>
+              </td>
+              <td class="py-3 px-4 text-xs text-blue-600">
+                <a v-if="v.gasContact" :href="`tel:${v.gasContact}`" class="hover:underline flex items-center gap-1"><PhoneIcon class="w-3 h-3" />{{ v.gasContact }}</a>
+                <span v-else class="text-slate-300 dark:text-slate-600">-</span>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -99,6 +115,7 @@
             <span :class="expiryChip(v.prbExpiry)" class="text-[10px] font-semibold px-2 py-1 rounded-lg">พ.ร.บ. {{ expiryLabel(v.prbExpiry) }}</span>
             <span :class="expiryChip(v.taxRenewalDate)" class="text-[10px] font-semibold px-2 py-1 rounded-lg">ภาษี {{ expiryLabel(v.taxRenewalDate) }}</span>
             <span :class="expiryChip(v.insExpiry)" class="text-[10px] font-semibold px-2 py-1 rounded-lg">ประกัน {{ expiryLabel(v.insExpiry) }}</span>
+            <span v-if="v.gasExpiry" :class="expiryChip(v.gasExpiry)" class="text-[10px] font-semibold px-2 py-1 rounded-lg">แก๊ส {{ expiryLabel(v.gasExpiry) }}</span>
           </div>
         </div>
       </div>
@@ -144,7 +161,7 @@ function expiryLabel(d) {
 
 const filteredVehicleDocs = computed(() => {
   let r = vehicleDocs.value
-  if (vd.value.docFilter) r = r.filter(v => expiryStatus(v.prbExpiry) === vd.value.docFilter || expiryStatus(v.taxRenewalDate) === vd.value.docFilter || expiryStatus(v.insExpiry) === vd.value.docFilter)
+  if (vd.value.docFilter) r = r.filter(v => expiryStatus(v.prbExpiry) === vd.value.docFilter || expiryStatus(v.taxRenewalDate) === vd.value.docFilter || expiryStatus(v.insExpiry) === vd.value.docFilter || expiryStatus(v.gasExpiry) === vd.value.docFilter)
   if (vd.value.search) {
     const q = vd.value.search.toLowerCase()
     r = r.filter(v => v.licensePlate.toLowerCase().includes(q) || v.type.toLowerCase().includes(q))
@@ -153,11 +170,11 @@ const filteredVehicleDocs = computed(() => {
 })
 
 const vdStats = computed(() => {
-  const check = v => [expiryStatus(v.prbExpiry), expiryStatus(v.taxRenewalDate), expiryStatus(v.insExpiry)]
+  const check = v => [expiryStatus(v.prbExpiry), expiryStatus(v.taxRenewalDate), expiryStatus(v.insExpiry), expiryStatus(v.gasExpiry)].filter(s => s !== 'none')
   return {
     expired: vehicleDocs.value.filter(v => check(v).includes('expired')).length,
     warning: vehicleDocs.value.filter(v => !check(v).includes('expired') && check(v).includes('warning')).length,
-    ok:      vehicleDocs.value.filter(v => check(v).every(s => s === 'ok')).length,
+    ok:      vehicleDocs.value.filter(v => check(v).length > 0 && check(v).every(s => s === 'ok')).length,
   }
 })
 

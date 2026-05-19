@@ -652,6 +652,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { TabGroup, TabList, Tab, TabPanels, TabPanel, Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue'
 import {
   TruckIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, ClockIcon, MagnifyingGlassIcon, ArrowsRightLeftIcon,
@@ -667,10 +668,12 @@ import { auth } from '../stores/auth'
 import { swalSuccess, swalError } from '../stores/swal'
 
 const BASE_URL = ``
+const route = useRoute()
 
 const bookings = ref([])
 const availableVehicles = ref([])
 const maintenanceVehicles = ref([])
+const allVehiclesList = ref([])
 const users = ref([])
 const searchText = ref('')
 const searchAvailable = ref('')
@@ -795,6 +798,7 @@ async function loadData() {
   availableVehicles.value = avRes.data
   users.value = uRes.data
   const allVehicles = vRes.data?.vehicles || vRes.data || []
+  allVehiclesList.value = allVehicles
   maintenanceVehicles.value = allVehicles.filter(v => v.status === 'MAINTENANCE')
 }
 
@@ -931,5 +935,12 @@ async function doReturn() {
   }
 }
 
-onMounted(loadData)
+onMounted(async () => {
+  await loadData()
+  const qVehicleId = route.query.vehicleId
+  if (qVehicleId) {
+    const v = allVehiclesList.value.find(v => v.id === Number(qVehicleId))
+    if (v) openCheckoutFor(v)
+  }
+})
 </script>

@@ -10,7 +10,7 @@
             <DocumentTextIcon class="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 class="text-lg sm:text-xl font-bold text-white">ต่อ พ.ร.บ. / ภาษี / ประกัน</h1>
+            <h1 class="text-lg sm:text-xl font-bold text-white">ต่อ พ.ร.บ. / ภาษี / ประกัน / แก๊ส</h1>
             <p class="text-teal-100 text-xs mt-0.5">บันทึกการต่ออายุเอกสารและเก็บประวัติ</p>
           </div>
         </div>
@@ -45,7 +45,125 @@
 
       <TabPanels>
 
-        <!-- Tab 1: บันทึกใหม่ -->
+        <!-- Tab 1: ภาพรวมยานพาหนะ -->
+        <TabPanel>
+          <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-500/25 dark:shadow-black/30 border border-gray-200 dark:border-slate-700 overflow-hidden mt-0">
+            <div class="px-5 py-4 border-b border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h2 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <TableCellsIcon class="w-5 h-5 text-teal-500" />
+                ภาพรวมเอกสารยานพาหนะ
+                <span class="text-sm font-normal text-slate-400">{{ vehicles.length }} คัน</span>
+              </h2>
+              <div class="flex flex-wrap items-center gap-2">
+                <input v-model="overviewSearch" placeholder="ค้นหาทะเบียน, ประเภท..."
+                  class="px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none dark:bg-slate-700 dark:text-white w-52" />
+                <AppSelect v-model="overviewFilter" :options="overviewFilterOptions" placeholder="ทุกสถานะ" :icon="TruckIcon" />
+              </div>
+            </div>
+
+            <!-- Summary pills -->
+            <div class="grid grid-cols-3 gap-3 px-5 py-3 border-b border-gray-100 dark:border-slate-700">
+              <div class="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 rounded-xl px-3 py-2.5 text-center">
+                <div class="text-xl font-bold text-red-600 dark:text-red-400">{{ overviewStats.expired }}</div>
+                <div class="text-[10px] text-red-500 dark:text-red-400 mt-0.5">หมดอายุ</div>
+              </div>
+              <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 rounded-xl px-3 py-2.5 text-center">
+                <div class="text-xl font-bold text-amber-600 dark:text-amber-400">{{ overviewStats.warning }}</div>
+                <div class="text-[10px] text-amber-500 dark:text-amber-400 mt-0.5">ใกล้หมด (≤30 วัน)</div>
+              </div>
+              <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 rounded-xl px-3 py-2.5 text-center">
+                <div class="text-xl font-bold text-emerald-600 dark:text-emerald-400">{{ overviewStats.ok }}</div>
+                <div class="text-[10px] text-emerald-500 dark:text-emerald-400 mt-0.5">ปกติ</div>
+              </div>
+            </div>
+
+            <!-- Desktop table -->
+            <div class="hidden sm:block overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr class="bg-slate-50/70 dark:bg-slate-700/30">
+                    <th class="text-left py-3 px-4 text-xs font-bold text-slate-400 uppercase">ยานพาหนะ</th>
+                    <th class="text-center py-3 px-4 text-xs font-bold text-slate-400 uppercase">พ.ร.บ.</th>
+                    <th class="text-center py-3 px-4 text-xs font-bold text-slate-400 uppercase">ภาษี</th>
+                    <th class="text-center py-3 px-4 text-xs font-bold text-slate-400 uppercase">ประกัน</th>
+                    <th class="text-center py-3 px-4 text-xs font-bold text-slate-400 uppercase">แก๊ส</th>
+                    <th class="text-left py-3 px-4 text-xs font-bold text-slate-400 uppercase">เบอร์ติดต่อ</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
+                  <tr v-for="v in filteredOverviewVehicles" :key="v.id" class="hover:bg-teal-50/30 dark:hover:bg-slate-700/30 transition">
+                    <td class="py-3 px-4">
+                      <div class="font-semibold text-sm text-slate-800 dark:text-white">{{ v.licensePlate }}</div>
+                      <div class="text-xs text-slate-400 dark:text-slate-500">{{ v.type }}</div>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                      <div class="flex flex-col items-center gap-0.5">
+                        <span :class="ovChip(v.prbExpiry)" class="text-[10px] font-semibold px-2 py-0.5 rounded-md whitespace-nowrap">{{ ovLabel(v.prbExpiry) }}</span>
+                        <span class="text-[10px] text-slate-400">{{ v.prbExpiry ? fmtDate(v.prbExpiry) : '-' }}</span>
+                      </div>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                      <div class="flex flex-col items-center gap-0.5">
+                        <span :class="ovChip(v.taxRenewalDate)" class="text-[10px] font-semibold px-2 py-0.5 rounded-md whitespace-nowrap">{{ ovLabel(v.taxRenewalDate) }}</span>
+                        <span class="text-[10px] text-slate-400">{{ v.taxRenewalDate ? fmtDate(v.taxRenewalDate) : '-' }}</span>
+                      </div>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                      <div class="flex flex-col items-center gap-0.5">
+                        <span :class="ovChip(v.insExpiry)" class="text-[10px] font-semibold px-2 py-0.5 rounded-md whitespace-nowrap">{{ ovLabel(v.insExpiry) }}</span>
+                        <span class="text-[10px] text-slate-400">{{ v.insExpiry ? fmtDate(v.insExpiry) : '-' }}</span>
+                      </div>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                      <div class="flex flex-col items-center gap-0.5">
+                        <div class="flex gap-1 mb-0.5">
+                          <span v-if="v.gasNgv" class="text-[9px] font-bold bg-orange-100 text-orange-600 px-1 py-0.5 rounded">NGV</span>
+                          <span v-if="v.gasLpg" class="text-[9px] font-bold bg-orange-100 text-orange-600 px-1 py-0.5 rounded">LPG</span>
+                        </div>
+                        <span :class="ovChip(v.gasExpiry)" class="text-[10px] font-semibold px-2 py-0.5 rounded-md whitespace-nowrap">{{ ovLabel(v.gasExpiry) }}</span>
+                        <span class="text-[10px] text-slate-400">{{ v.gasExpiry ? fmtDate(v.gasExpiry) : '-' }}</span>
+                      </div>
+                    </td>
+                    <td class="py-3 px-4 text-xs space-y-0.5">
+                      <div v-if="v.prbContact" class="flex items-center gap-1 text-blue-600">
+                        <PhoneIcon class="w-3 h-3 shrink-0" /><span>พรบ. {{ v.prbContact }}</span>
+                      </div>
+                      <div v-if="v.insContact" class="flex items-center gap-1 text-blue-600">
+                        <PhoneIcon class="w-3 h-3 shrink-0" /><span>ประกัน {{ v.insContact }}</span>
+                      </div>
+                      <div v-if="v.gasContact" class="flex items-center gap-1 text-blue-600">
+                        <PhoneIcon class="w-3 h-3 shrink-0" /><span>แก๊ส {{ v.gasContact }}</span>
+                      </div>
+                      <span v-if="!v.prbContact && !v.insContact && !v.gasContact" class="text-slate-300 dark:text-slate-600">-</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Mobile cards -->
+            <div class="sm:hidden divide-y divide-gray-100 dark:divide-slate-700">
+              <div v-for="v in filteredOverviewVehicles" :key="v.id" class="px-4 py-3.5">
+                <div class="font-semibold text-sm text-slate-800 dark:text-white mb-2">
+                  {{ v.licensePlate }} <span class="font-normal text-slate-400 text-xs">{{ v.type }}</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                  <span :class="ovChip(v.prbExpiry)" class="text-[10px] font-semibold px-2 py-1 rounded-lg">พ.ร.บ. {{ ovLabel(v.prbExpiry) }}</span>
+                  <span :class="ovChip(v.taxRenewalDate)" class="text-[10px] font-semibold px-2 py-1 rounded-lg">ภาษี {{ ovLabel(v.taxRenewalDate) }}</span>
+                  <span :class="ovChip(v.insExpiry)" class="text-[10px] font-semibold px-2 py-1 rounded-lg">ประกัน {{ ovLabel(v.insExpiry) }}</span>
+                  <span v-if="v.gasNgv || v.gasLpg || v.gasExpiry" :class="ovChip(v.gasExpiry)" class="text-[10px] font-semibold px-2 py-1 rounded-lg">แก๊ส {{ ovLabel(v.gasExpiry) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="!filteredOverviewVehicles.length" class="py-16 flex flex-col items-center gap-3 text-slate-400 dark:text-slate-500">
+              <TruckIcon class="w-10 h-10 opacity-30" />
+              <p class="text-sm font-medium">ไม่พบยานพาหนะ</p>
+            </div>
+          </div>
+        </TabPanel>
+
+        <!-- Tab 2: บันทึกใหม่ -->
         <TabPanel>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-0">
 
@@ -78,7 +196,7 @@
                   <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
                     ประเภทการต่ออายุ <span class="text-red-500">*</span>
                   </label>
-                  <div class="grid grid-cols-3 gap-2">
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <button v-for="t in renewalTypes" :key="t.value" type="button"
                       @click="form.type = t.value; selectedProviders = []"
                       :class="[
@@ -107,10 +225,12 @@
                   </div>
                 </transition>
 
-                <!-- บริษัทที่ต่อ -->
+                <!-- บริษัทที่ต่อ / ประเภทแก๊ส -->
                 <transition name="fade">
                   <div v-if="form.type !== 'TAX' && availableProviders.length > 0">
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">บริษัทที่ต่อ</label>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                      {{ form.type === 'GAS' ? 'ประเภทแก๊ส' : 'บริษัทที่ต่อ' }}
+                    </label>
                     <div class="flex flex-wrap gap-2">
                       <button v-for="p in availableProviders" :key="p.value" type="button"
                         @click="toggleProvider(p.value)"
@@ -247,7 +367,7 @@
           </div>
         </TabPanel>
 
-        <!-- Tab 2: ประวัติ -->
+        <!-- Tab 3: ประวัติ -->
         <TabPanel>
           <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-500/25 dark:shadow-black/30 border border-gray-200 dark:border-slate-700 overflow-hidden mt-0">
             <div class="px-5 py-4 border-b border-gray-200 dark:border-slate-700">
@@ -376,7 +496,7 @@
                 <DocumentTextIcon class="w-8 h-8 opacity-40" />
               </div>
               <p class="text-sm font-medium">ยังไม่มีประวัติการต่ออายุ</p>
-              <button @click="activeTab = 0" class="text-xs text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-300 font-semibold bg-teal-50 dark:bg-teal-900/20 px-4 py-2 rounded-xl transition">
+              <button @click="activeTab = 1" class="text-xs text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-300 font-semibold bg-teal-50 dark:bg-teal-900/20 px-4 py-2 rounded-xl transition">
                 + บันทึกการต่ออายุใหม่
               </button>
             </div>
@@ -391,11 +511,12 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { TabGroup, TabList, Tab, TabPanels, TabPanel } from '@headlessui/vue'
 import {
   DocumentTextIcon, PlusCircleIcon, TruckIcon, CalendarIcon, CalendarDaysIcon,
   ClockIcon, CheckCircleIcon, XMarkIcon, TrashIcon, PaperClipIcon, PhotoIcon,
-  BuildingOfficeIcon, ShieldCheckIcon
+  BuildingOfficeIcon, ShieldCheckIcon, FireIcon, TableCellsIcon, PhoneIcon
 } from '@heroicons/vue/24/outline'
 import AppSelect from '../components/AppSelect.vue'
 import AppDateFilter from '../components/AppDateFilter.vue'
@@ -405,6 +526,7 @@ import { auth } from '../stores/auth'
 import { swalSuccess, swalError, swalConfirm } from '../stores/swal'
 
 const BASE_URL = ``
+const router = useRouter()
 
 const PAGE_SIZE = 10
 
@@ -448,12 +570,14 @@ const INS_PROVIDERS = [
 const renewalTypes = [
   { value: 'PRB', label: 'พ.ร.บ.', icon: ShieldCheckIcon, activeClass: 'border-blue-400 bg-blue-50 text-blue-700', iconBg: 'bg-blue-100', iconColor: 'text-blue-600' },
   { value: 'TAX', label: 'ภาษี', icon: BuildingOfficeIcon, activeClass: 'border-amber-400 bg-amber-50 text-amber-700', iconBg: 'bg-amber-100', iconColor: 'text-amber-600' },
-  { value: 'INS', label: 'ประกัน', icon: DocumentTextIcon, activeClass: 'border-emerald-400 bg-emerald-50 text-emerald-700', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600' }
+  { value: 'INS', label: 'ประกัน', icon: DocumentTextIcon, activeClass: 'border-emerald-400 bg-emerald-50 text-emerald-700', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600' },
+  { value: 'GAS', label: 'แก๊ส', icon: FireIcon, activeClass: 'border-orange-400 bg-orange-50 text-orange-700', iconBg: 'bg-orange-100', iconColor: 'text-orange-600' }
 ]
 
-const typeIconMap = { PRB: ShieldCheckIcon, TAX: BuildingOfficeIcon, INS: DocumentTextIcon }
+const typeIconMap = { PRB: ShieldCheckIcon, TAX: BuildingOfficeIcon, INS: DocumentTextIcon, GAS: FireIcon }
 
 const tabs = [
+  { id: 'overview', label: 'ภาพรวมยานพาหนะ', icon: TableCellsIcon },
   { id: 'form', label: 'บันทึกการต่ออายุ', icon: PlusCircleIcon },
   { id: 'history', label: 'ประวัติทั้งหมด', icon: ClockIcon }
 ]
@@ -469,24 +593,36 @@ const vehicleFilterOptions = computed(() =>
 const typeFilterOptions = [
   { value: 'PRB', label: 'พ.ร.บ.', icon: ShieldCheckIcon },
   { value: 'TAX', label: 'ภาษี', icon: BuildingOfficeIcon },
-  { value: 'INS', label: 'ประกัน', icon: DocumentTextIcon }
+  { value: 'INS', label: 'ประกัน', icon: DocumentTextIcon },
+  { value: 'GAS', label: 'แก๊ส', icon: FireIcon }
 ]
 
 const selectedVehicle = computed(() =>
   vehicles.value.find(v => v.id === Number(form.value.vehicleId)) || null
 )
 
+const GAS_TYPES = [
+  { field: 'gasNgv', label: 'NGV' },
+  { field: 'gasLpg', label: 'LPG' }
+]
+
 const availableProviders = computed(() => {
-  if (!selectedVehicle.value || !form.value.type) return []
+  if (!form.value.type) return []
   const v = selectedVehicle.value
-  if (form.value.type === 'PRB') return PRB_PROVIDERS.filter(p => v[p.field]).map(p => ({ value: p.label, label: p.label }))
-  if (form.value.type === 'INS') return INS_PROVIDERS.filter(p => v[p.field]).map(p => ({ value: p.label, label: p.label }))
+  if (form.value.type === 'PRB' && v) return PRB_PROVIDERS.filter(p => v[p.field]).map(p => ({ value: p.label, label: p.label }))
+  if (form.value.type === 'INS' && v) return INS_PROVIDERS.filter(p => v[p.field]).map(p => ({ value: p.label, label: p.label }))
+  if (form.value.type === 'GAS') return GAS_TYPES.map(p => ({ value: p.label, label: p.label }))
   return []
 })
 
 function getVehicleExpiry(type) {
   if (!selectedVehicle.value) return null
-  return { PRB: selectedVehicle.value.prbExpiry, TAX: selectedVehicle.value.taxRenewalDate, INS: selectedVehicle.value.insExpiry }[type]
+  return {
+    PRB: selectedVehicle.value.prbExpiry,
+    TAX: selectedVehicle.value.taxRenewalDate,
+    INS: selectedVehicle.value.insExpiry,
+    GAS: selectedVehicle.value.gasExpiry
+  }[type]
 }
 
 const currentExpiryDisplay = computed(() => {
@@ -532,12 +668,22 @@ function fileUrl(filename) {
   return `${BASE_URL}/uploads/${filename}`
 }
 function isPdf(filename) { return filename?.toLowerCase().endsWith('.pdf') }
-function typeLabel(type) { return { PRB: 'พ.ร.บ.', TAX: 'ภาษี', INS: 'ประกัน' }[type] }
+function typeLabel(type) { return { PRB: 'พ.ร.บ.', TAX: 'ภาษี', INS: 'ประกัน', GAS: 'แก๊ส' }[type] }
 function typePillClass(type) {
-  return { PRB: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400', TAX: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400', INS: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' }[type]
+  return {
+    PRB: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400',
+    TAX: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400',
+    INS: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400',
+    GAS: 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400'
+  }[type]
 }
 function typeBadgeClass(type) {
-  return { PRB: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400', TAX: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400', INS: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' }[type]
+  return {
+    PRB: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
+    TAX: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400',
+    INS: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400',
+    GAS: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
+  }[type]
 }
 
 async function loadVehicles() {
@@ -574,9 +720,10 @@ async function submitRenewal() {
     if (form.value.note) fd.append('note', form.value.note)
     if (form.value.documentFile) fd.append('document', form.value.documentFile)
 
+    const savedVehicleId = form.value.vehicleId
+    const savedVehicle = selectedVehicle.value
     await api.post('/renewals', fd)
     const tLabel = typeLabel(form.value.type)
-    swalSuccess('บันทึกสำเร็จ', `ต่ออายุ${tLabel}เรียบร้อยแล้ว`)
 
     form.value = { vehicleId: form.value.vehicleId, type: '', expiryDate: '', note: '', documentFile: null }
     selectedProviders.value = []
@@ -584,7 +731,15 @@ async function submitRenewal() {
 
     histPage.value = 1
     await Promise.all([loadVehicles(), loadHistory()])
-    // ไม่เปลี่ยน tab — ให้กรอกข้อมูลถัดไปต่อได้เลย
+
+    const confirm = await swalConfirm(
+      'บันทึกสำเร็จ',
+      `ต่ออายุ${tLabel}เรียบร้อยแล้ว\n\nต้องการเบิกยานพาหนะ "${savedVehicle?.licensePlate}" เลยไหม?`,
+      'เบิกยานพาหนะ'
+    )
+    if (confirm.isConfirmed) {
+      router.push(`/bookings?vehicleId=${savedVehicleId}`)
+    }
   } catch (err) {
     swalError('เกิดข้อผิดพลาด', err.response?.data?.error || 'ไม่สามารถบันทึกได้')
   } finally {
@@ -604,6 +759,61 @@ async function deleteRenewal(r) {
     swalError('เกิดข้อผิดพลาด', err.response?.data?.error || 'ไม่สามารถลบได้')
   }
 }
+
+// ─── Overview tab ────────────────────────────────────────────────────────────
+const overviewSearch = ref('')
+const overviewFilter = ref('')
+const overviewFilterOptions = [
+  { value: 'expired', label: 'หมดอายุ' },
+  { value: 'warning', label: 'ใกล้หมด (≤30 วัน)' },
+  { value: 'ok', label: 'ปกติ' }
+]
+
+function ovStatus(d) {
+  if (!d) return 'none'
+  const days = Math.floor((new Date(d) - new Date()) / 86400000)
+  if (days < 0) return 'expired'
+  if (days <= 30) return 'warning'
+  return 'ok'
+}
+function ovChip(d) {
+  return {
+    none:    'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500',
+    expired: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
+    warning: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
+    ok:      'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+  }[ovStatus(d)]
+}
+function ovLabel(d) {
+  const s = ovStatus(d)
+  if (s === 'none') return '-'
+  const days = Math.floor((new Date(d) - new Date()) / 86400000)
+  if (s === 'expired') return 'หมดแล้ว'
+  if (s === 'warning') return `${days} วัน`
+  return 'ปกติ'
+}
+
+const filteredOverviewVehicles = computed(() => {
+  let r = vehicles.value
+  if (overviewSearch.value) {
+    const q = overviewSearch.value.toLowerCase()
+    r = r.filter(v => v.licensePlate.toLowerCase().includes(q) || v.type.toLowerCase().includes(q))
+  }
+  if (overviewFilter.value) {
+    const f = overviewFilter.value
+    r = r.filter(v => [ovStatus(v.prbExpiry), ovStatus(v.taxRenewalDate), ovStatus(v.insExpiry), ovStatus(v.gasExpiry)].includes(f))
+  }
+  return r
+})
+
+const overviewStats = computed(() => {
+  const allStatuses = v => [ovStatus(v.prbExpiry), ovStatus(v.taxRenewalDate), ovStatus(v.insExpiry), ovStatus(v.gasExpiry)].filter(s => s !== 'none')
+  return {
+    expired: vehicles.value.filter(v => allStatuses(v).includes('expired')).length,
+    warning: vehicles.value.filter(v => !allStatuses(v).includes('expired') && allStatuses(v).includes('warning')).length,
+    ok:      vehicles.value.filter(v => allStatuses(v).length > 0 && allStatuses(v).every(s => s === 'ok')).length
+  }
+})
 
 watch(filterVehicleId, () => { histPage.value = 1; loadHistory() })
 watch(filterType, () => { histPage.value = 1; loadHistory() })

@@ -5,7 +5,7 @@ const { logActivity } = require('../services/logger')
 const { uploadWithPdf } = require('../middleware/upload')
 const { uploadToBlob, deleteFromBlob } = require('../services/azureBlob')
 
-const EXPIRY_FIELD = { PRB: 'prbExpiry', TAX: 'taxRenewalDate', INS: 'insExpiry' }
+const EXPIRY_FIELD = { PRB: 'prbExpiry', TAX: 'taxRenewalDate', INS: 'insExpiry', GAS: 'gasExpiry' }
 
 function parseDateUTC(value) {
   if (!value) return null
@@ -81,7 +81,7 @@ router.post('/', uploadWithPdf.single('document'), async (req, res) => {
       data: { [vehicleField]: expiry }
     })
 
-    const typeLabel = { PRB: 'พ.ร.บ.', TAX: 'ภาษี', INS: 'ประกัน' }[type]
+    const typeLabel = { PRB: 'พ.ร.บ.', TAX: 'ภาษี', INS: 'ประกัน', GAS: 'แก๊ส' }[type]
     await logActivity(userId, 'RENEW', `ต่อ${typeLabel} ${renewal.vehicle.licensePlate} หมดอายุ ${expiryDate}`, 'VehicleRenewal', renewal.id)
 
     res.json(renewal)
@@ -105,7 +105,7 @@ router.delete('/:id', async (req, res) => {
     await prisma.vehicleRenewal.delete({ where: { id: Number(req.params.id) } })
 
     if (actionUserId) {
-      const typeLabel = { PRB: 'พ.ร.บ.', TAX: 'ภาษี', INS: 'ประกัน' }[renewal.type]
+      const typeLabel = { PRB: 'พ.ร.บ.', TAX: 'ภาษี', INS: 'ประกัน', GAS: 'แก๊ส' }[renewal.type]
       await logActivity(actionUserId, 'DELETE', `ลบประวัติต่อ${typeLabel} ${renewal.vehicle.licensePlate}`, 'VehicleRenewal', renewal.id)
     }
 

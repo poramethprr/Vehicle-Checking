@@ -110,6 +110,15 @@
                   <div>
                     <div class="text-sm font-medium text-slate-800 dark:text-white">{{ u.displayName || u.username }}</div>
                     <div class="text-xs text-slate-400 dark:text-slate-500">@{{ u.username }}</div>
+                    <div v-if="u.microsoftId" class="flex items-center gap-1 mt-0.5">
+                      <svg viewBox="0 0 23 23" width="12" height="12" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="0" y="0" width="11" height="11" fill="#f25022"/>
+                        <rect x="12" y="0" width="11" height="11" fill="#7fba00"/>
+                        <rect x="0" y="12" width="11" height="11" fill="#00a4ef"/>
+                        <rect x="12" y="12" width="11" height="11" fill="#ffb900"/>
+                      </svg>
+                      <span class="text-[10px] text-blue-500 font-medium">Microsoft</span>
+                    </div>
                   </div>
                 </div>
               </td>
@@ -224,6 +233,15 @@
                   <div>
                     <div class="text-sm font-medium text-slate-800 dark:text-white">{{ u.displayName || u.username }}</div>
                     <div class="text-xs text-slate-400 dark:text-slate-500">@{{ u.username }}</div>
+                    <div v-if="u.microsoftId" class="flex items-center gap-1 mt-0.5">
+                      <svg viewBox="0 0 23 23" width="12" height="12" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="0" y="0" width="11" height="11" fill="#f25022"/>
+                        <rect x="12" y="0" width="11" height="11" fill="#7fba00"/>
+                        <rect x="0" y="12" width="11" height="11" fill="#00a4ef"/>
+                        <rect x="12" y="12" width="11" height="11" fill="#ffb900"/>
+                      </svg>
+                      <span class="text-[10px] text-blue-500 font-medium">Microsoft</span>
+                    </div>
                   </div>
                 </div>
               </td>
@@ -531,6 +549,48 @@
                     </div>
                   </div>
 
+                  <!-- Microsoft SSO Section -->
+                  <div class="pt-1 border-t border-gray-100 dark:border-slate-700">
+                    <p class="text-xs text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1.5">
+                      <svg viewBox="0 0 23 23" width="14" height="14" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
+                        <rect x="0" y="0" width="11" height="11" fill="#f25022"/>
+                        <rect x="12" y="0" width="11" height="11" fill="#7fba00"/>
+                        <rect x="0" y="12" width="11" height="11" fill="#00a4ef"/>
+                        <rect x="12" y="12" width="11" height="11" fill="#ffb900"/>
+                      </svg>
+                      Microsoft SSO
+                    </p>
+                    <div class="space-y-3">
+                      <div>
+                        <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Microsoft Email</label>
+                        <input v-model="editForm.microsoftEmail" placeholder="user@organization.com" type="email"
+                          class="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl text-sm shadow-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition dark:text-white dark:placeholder-slate-400" />
+                        <p class="text-[11px] text-slate-400 mt-1">ใส่ email Microsoft เพื่อเชื่อมบัญชีอัตโนมัติเมื่อ login ครั้งแรก</p>
+                      </div>
+                      <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                        <div>
+                          <div class="text-sm font-semibold text-slate-700 dark:text-slate-200">บังคับใช้ Microsoft SSO เท่านั้น</div>
+                          <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">เปิด: ผู้ใช้ต้อง login ผ่าน Microsoft เท่านั้น รหัสผ่านจะถูกล้าง</div>
+                        </div>
+                        <button type="button" @click="editForm.requireMicrosoftSSO = !editForm.requireMicrosoftSSO"
+                          :class="editForm.requireMicrosoftSSO ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'"
+                          class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 focus:outline-none">
+                          <span :class="editForm.requireMicrosoftSSO ? 'translate-x-5' : 'translate-x-0.5'"
+                            class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 mt-0.5" />
+                        </button>
+                      </div>
+                      <div v-if="editingUser?.microsoftId" class="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl px-3 py-2">
+                        <svg viewBox="0 0 23 23" width="14" height="14" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
+                          <rect x="0" y="0" width="11" height="11" fill="#f25022"/>
+                          <rect x="12" y="0" width="11" height="11" fill="#7fba00"/>
+                          <rect x="0" y="12" width="11" height="11" fill="#00a4ef"/>
+                          <rect x="12" y="12" width="11" height="11" fill="#ffb900"/>
+                        </svg>
+                        เชื่อมต่อ Microsoft แล้ว
+                      </div>
+                    </div>
+                  </div>
+
                   <div class="flex gap-3 pt-2">
                     <button type="button" @click="showEditModal = false"
                       class="flex-1 py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-semibold rounded-xl transition text-sm">
@@ -621,7 +681,7 @@ function openLicensePhoto(u) { licensePhotoUser.value = u }
 const showEditModal = ref(false)
 const editLoading = ref(false)
 const editingUser = ref(null)
-const editForm = ref({ displayName: '', username: '', phone: '', role: '', password: '', confirmPassword: '', licenseNumber: '', licenseExpiry: '', licensePhotoFile: null, existingLicensePhoto: null, removeLicensePhoto: false })
+const editForm = ref({ displayName: '', username: '', phone: '', role: '', password: '', confirmPassword: '', licenseNumber: '', licenseExpiry: '', licensePhotoFile: null, existingLicensePhoto: null, removeLicensePhoto: false, microsoftEmail: '', requireMicrosoftSSO: false })
 const showEditPwd = ref(false)
 const editPhotoPreview = ref(null)
 
@@ -751,7 +811,9 @@ function openEdit(u) {
     licenseExpiry: u.licenseExpiry ? toLocalDateStr(u.licenseExpiry) : '',
     licensePhotoFile: null,
     existingLicensePhoto: u.licensePhoto || null,
-    removeLicensePhoto: false
+    removeLicensePhoto: false,
+    microsoftEmail: u.microsoftEmail || '',
+    requireMicrosoftSSO: u.requireMicrosoftSSO || false
   }
   editPhotoPreview.value = null
   showEditPwd.value = false
@@ -782,6 +844,8 @@ async function saveUser() {
       fd.append('removeLicensePhoto', 'true')
     }
     if (editForm.value.password) fd.append('password', editForm.value.password)
+    fd.append('microsoftEmail', editForm.value.microsoftEmail || '')
+    fd.append('requireMicrosoftSSO', editForm.value.requireMicrosoftSSO ? 'true' : 'false')
     await api.put(`/users/${editingUser.value.id}`, fd)
     swalSuccess('อัพเดทสำเร็จ', 'แก้ไขข้อมูลผู้ใช้เรียบร้อยแล้ว')
     showEditModal.value = false

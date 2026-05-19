@@ -9,7 +9,7 @@
           </div>
           <div>
             <h1 class="text-lg sm:text-xl font-bold text-white">จัดการยานพาหนะ</h1>
-            <p class="text-blue-200 text-xs mt-0.5">ข้อมูลยานพาหนะ, พ.ร.บ., ประกัน</p>
+            <p class="text-blue-200 text-xs mt-0.5">ข้อมูลยานพาหนะ, พ.ร.บ., ประกัน, แก๊ส</p>
           </div>
         </div>
         <div class="flex flex-wrap gap-2 self-start sm:self-auto">
@@ -90,15 +90,18 @@
             <div v-if="v.taxRenewalDate"><span class="text-slate-400 dark:text-slate-500">ต่อภาษี:</span> {{ fmtDate(v.taxRenewalDate) }}
             </div>
           </div>
-          <div class="flex gap-1.5 mb-3">
-            <span :class="expiryChip(v.prbExpiry)" class="flex-1 text-center text-[10px] font-semibold px-1.5 py-1.5 rounded-lg">
+          <div class="flex gap-1 mb-3 flex-wrap">
+            <span :class="expiryChip(v.prbExpiry)" class="flex-1 text-center text-[10px] font-semibold px-1.5 py-1.5 rounded-lg min-w-0">
               {{ expiryShortLabel(v.prbExpiry, 'พ.ร.บ.') }}
             </span>
-            <span :class="expiryChip(v.taxRenewalDate)" class="flex-1 text-center text-[10px] font-semibold px-1.5 py-1.5 rounded-lg">
+            <span :class="expiryChip(v.taxRenewalDate)" class="flex-1 text-center text-[10px] font-semibold px-1.5 py-1.5 rounded-lg min-w-0">
               {{ expiryShortLabel(v.taxRenewalDate, 'ภาษี') }}
             </span>
-            <span :class="expiryChip(v.insExpiry)" class="flex-1 text-center text-[10px] font-semibold px-1.5 py-1.5 rounded-lg">
+            <span :class="expiryChip(v.insExpiry)" class="flex-1 text-center text-[10px] font-semibold px-1.5 py-1.5 rounded-lg min-w-0">
               {{ expiryShortLabel(v.insExpiry, 'ประกัน') }}
+            </span>
+            <span v-if="v.gasExpiry" :class="expiryChip(v.gasExpiry)" class="flex-1 text-center text-[10px] font-semibold px-1.5 py-1.5 rounded-lg min-w-0">
+              {{ expiryShortLabel(v.gasExpiry, 'แก๊ส') }}
             </span>
           </div>
           <div class="flex gap-2">
@@ -131,7 +134,7 @@
               <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">ยานพาหนะ</th>
               <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">ทะเบียน</th>
               <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">สถานะ</th>
-              <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">พ.ร.บ. / ภาษี / ประกัน</th>
+              <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">พ.ร.บ. / ภาษี / ประกัน / แก๊ส</th>
               <th class="text-right py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">จัดการ</th>
             </tr>
           </thead>
@@ -171,7 +174,7 @@
                 </td>
                 <!-- เอกสาร chips -->
                 <td class="py-3 px-4 text-center">
-                  <div class="flex items-center justify-center gap-1.5">
+                  <div class="flex items-center justify-center gap-1.5 flex-wrap">
                     <span :class="expiryChip(v.prbExpiry)" class="text-[10px] font-semibold px-2 py-1 rounded-lg whitespace-nowrap">
                       {{ expiryShortLabel(v.prbExpiry, 'พ.ร.บ.') }}
                     </span>
@@ -180,6 +183,9 @@
                     </span>
                     <span :class="expiryChip(v.insExpiry)" class="text-[10px] font-semibold px-2 py-1 rounded-lg whitespace-nowrap">
                       {{ expiryShortLabel(v.insExpiry, 'ประกัน') }}
+                    </span>
+                    <span v-if="v.gasExpiry" :class="expiryChip(v.gasExpiry)" class="text-[10px] font-semibold px-2 py-1 rounded-lg whitespace-nowrap">
+                      {{ expiryShortLabel(v.gasExpiry, 'แก๊ส') }}
                     </span>
                   </div>
                 </td>
@@ -204,7 +210,7 @@
               <tr v-if="expandedId === v.id" class="border-t border-blue-100 dark:border-slate-700">
                 <td colspan="6" class="px-0 py-0">
                   <div class="bg-linear-to-br from-blue-50/60 to-slate-50/40 dark:from-slate-700/40 dark:to-slate-700/20 px-6 py-4 border-b border-blue-100 dark:border-slate-700">
-                    <div class="grid grid-cols-3 gap-4">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
                       <!-- Col 1: ข้อมูลพื้นฐาน -->
                       <div class="space-y-3">
@@ -230,6 +236,15 @@
                             <span class="text-slate-400 dark:text-slate-500 shrink-0 w-24">ไมล์ถัดไป</span>
                             <span class="font-medium text-slate-700 dark:text-slate-200">{{ v.nextMileage ? num(v.nextMileage) + ' กม.' : '-' }}</span>
                           </div>
+                          <div class="border-t border-slate-200 dark:border-slate-600 pt-2 mt-2">
+                            <div class="flex items-baseline gap-2">
+                              <span class="text-slate-400 dark:text-slate-500 shrink-0 w-24">ต่อภาษีรถ</span>
+                              <span :class="v.taxRenewalDate ? expiryChip(v.taxRenewalDate) : 'text-slate-400'" class="font-medium text-xs px-1.5 py-0.5 rounded">{{ v.taxRenewalDate ? fmtDate(v.taxRenewalDate) : '-' }}</span>
+                            </div>
+                            <button v-if="v.taxDoc" @click.stop="openDoc(v.taxDoc)" class="mt-1.5 flex items-center gap-1 text-[10px] text-blue-600 hover:underline">
+                              <PaperClipIcon class="w-3 h-3" /> ดูเอกสารภาษี
+                            </button>
+                          </div>
                           <div v-if="v.note" class="mt-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 rounded-lg px-2.5 py-1.5 text-amber-800 dark:text-amber-300">
                             <span class="font-semibold">หมายเหตุ:</span> {{ v.note }}
                           </div>
@@ -242,35 +257,34 @@
                         <div class="space-y-1.5 text-xs">
                           <div class="flex items-center gap-2">
                             <span :class="expiryChip(v.prbExpiry)" class="text-[10px] font-bold px-2 py-0.5 rounded-md">{{ expiryShortLabel(v.prbExpiry, 'พ.ร.บ.') }}</span>
-                            <span class="text-slate-500 dark:text-slate-400">{{ v.prbExpiry ? fmtDate(v.prbExpiry) : 'ไม่ระบุ' }}</span>
                           </div>
-                          <div class="flex items-center gap-2">
-                            <span :class="expiryChip(v.taxRenewalDate)" class="text-[10px] font-bold px-2 py-0.5 rounded-md">{{ expiryShortLabel(v.taxRenewalDate, 'ภาษี') }}</span>
-                            <span class="text-slate-500 dark:text-slate-400">{{ v.taxRenewalDate ? fmtDate(v.taxRenewalDate) : 'ไม่ระบุ' }}</span>
+                          <div class="flex items-baseline gap-2">
+                            <span class="text-slate-400 dark:text-slate-500 shrink-0 w-20">วันหมดอายุ</span>
+                            <span class="font-semibold" :class="v.prbExpiry ? (expiryStatus(v.prbExpiry) === 'expired' ? 'text-red-600' : expiryStatus(v.prbExpiry) === 'warning' ? 'text-amber-600' : 'text-emerald-600') : 'text-slate-400'">{{ v.prbExpiry ? fmtDate(v.prbExpiry) : 'ไม่ระบุ' }}</span>
+                          </div>
+                          <div v-if="v.prbDate" class="flex items-baseline gap-2">
+                            <span class="text-slate-400 dark:text-slate-500 shrink-0 w-20">วันที่ พ.ร.บ.</span>
+                            <span class="text-slate-600 dark:text-slate-300">{{ fmtDate(v.prbDate) }}</span>
+                          </div>
+                          <div v-if="v.prbTaxDate" class="flex items-baseline gap-2">
+                            <span class="text-slate-400 dark:text-slate-500 shrink-0 w-20">วันต่อภาษี</span>
+                            <span class="text-slate-600 dark:text-slate-300">{{ fmtDate(v.prbTaxDate) }}</span>
                           </div>
                           <div v-if="v.prbContact" class="flex items-center gap-1.5 text-blue-600 font-medium">
                             <PhoneIcon class="w-3 h-3 shrink-0" />
                             <a :href="`tel:${v.prbContact}`" class="hover:underline" @click.stop>{{ v.prbContact }}</a>
                           </div>
+                          <button v-if="v.prbDoc" @click.stop="openDoc(v.prbDoc)" class="flex items-center gap-1 text-[10px] text-blue-600 hover:underline">
+                            <PaperClipIcon class="w-3 h-3" /> ดูเอกสาร พ.ร.บ.
+                          </button>
                           <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 grid grid-cols-2 gap-x-4 gap-y-1">
-                            <span :class="v.prbLmg ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
-                              <span>{{ v.prbLmg ? '✓' : '✗' }}</span> LMG
-                            </span>
-                            <span :class="v.prbViriya ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
-                              <span>{{ v.prbViriya ? '✓' : '✗' }}</span> วิริยะ
-                            </span>
-                            <span :class="v.prbAkney ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
-                              <span>{{ v.prbAkney ? '✓' : '✗' }}</span> อาคเนย์
-                            </span>
-                            <span :class="v.prbThewet ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
-                              <span>{{ v.prbThewet ? '✓' : '✗' }}</span> เทเวศ
-                            </span>
-                            <span :class="v.prbInsurance ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
-                              <span>{{ v.prbInsurance ? '✓' : '✗' }}</span> คุ้มภัย
-                            </span>
-                            <span :class="v.prbBangkokInsurance ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
-                              <span>{{ v.prbBangkokInsurance ? '✓' : '✗' }}</span> กรุงเทพ
-                            </span>
+                            <span :class="v.prbLmg ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1"><span>{{ v.prbLmg ? '✓' : '✗' }}</span> LMG</span>
+                            <span :class="v.prbViriya ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1"><span>{{ v.prbViriya ? '✓' : '✗' }}</span> วิริยะ</span>
+                            <span :class="v.prbAkney ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1"><span>{{ v.prbAkney ? '✓' : '✗' }}</span> อาคเนย์</span>
+                            <span :class="v.prbThewet ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1"><span>{{ v.prbThewet ? '✓' : '✗' }}</span> เทเวศ</span>
+                            <span :class="v.prbInsurance ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1"><span>{{ v.prbInsurance ? '✓' : '✗' }}</span> คุ้มภัย</span>
+                            <span :class="v.prbBangkokInsurance ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1"><span>{{ v.prbBangkokInsurance ? '✓' : '✗' }}</span> กรุงเทพ</span>
+                            <span :class="v.prbThirdParty ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1 col-span-2"><span>{{ v.prbThirdParty ? '✓' : '✗' }}</span> ทำประกันภัยรถ</span>
                           </div>
                         </div>
                       </div>
@@ -281,35 +295,60 @@
                         <div class="space-y-1.5 text-xs">
                           <div class="flex items-center gap-2">
                             <span :class="expiryChip(v.insExpiry)" class="text-[10px] font-bold px-2 py-0.5 rounded-md">{{ expiryShortLabel(v.insExpiry, 'ประกัน') }}</span>
-                            <span class="text-slate-500 dark:text-slate-400">{{ v.insExpiry ? fmtDate(v.insExpiry) : 'ไม่ระบุ' }}</span>
+                          </div>
+                          <div class="flex items-baseline gap-2">
+                            <span class="text-slate-400 dark:text-slate-500 shrink-0 w-20">วันหมดอายุ</span>
+                            <span class="font-semibold" :class="v.insExpiry ? (expiryStatus(v.insExpiry) === 'expired' ? 'text-red-600' : expiryStatus(v.insExpiry) === 'warning' ? 'text-amber-600' : 'text-emerald-600') : 'text-slate-400'">{{ v.insExpiry ? fmtDate(v.insExpiry) : 'ไม่ระบุ' }}</span>
+                          </div>
+                          <div v-if="v.insDate" class="flex items-baseline gap-2">
+                            <span class="text-slate-400 dark:text-slate-500 shrink-0 w-20">วันที่ประกัน</span>
+                            <span class="text-slate-600 dark:text-slate-300">{{ fmtDate(v.insDate) }}</span>
+                          </div>
+                          <div v-if="v.insTaxDate" class="flex items-baseline gap-2">
+                            <span class="text-slate-400 dark:text-slate-500 shrink-0 w-20">วันต่อภาษี</span>
+                            <span class="text-slate-600 dark:text-slate-300">{{ fmtDate(v.insTaxDate) }}</span>
                           </div>
                           <div v-if="v.insContact" class="flex items-center gap-1.5 text-blue-600 font-medium">
                             <PhoneIcon class="w-3 h-3 shrink-0" />
                             <a :href="`tel:${v.insContact}`" class="hover:underline" @click.stop>{{ v.insContact }}</a>
                           </div>
+                          <button v-if="v.insDoc" @click.stop="openDoc(v.insDoc)" class="flex items-center gap-1 text-[10px] text-blue-600 hover:underline">
+                            <PaperClipIcon class="w-3 h-3" /> ดูเอกสารประกัน
+                          </button>
                           <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 grid grid-cols-2 gap-x-4 gap-y-1">
-                            <span :class="v.insLmg ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
-                              <span>{{ v.insLmg ? '✓' : '✗' }}</span> LMG
-                            </span>
-                            <span :class="v.insViriya ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
-                              <span>{{ v.insViriya ? '✓' : '✗' }}</span> วิริยะ
-                            </span>
-                            <span :class="v.insThaiInsurance ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
-                              <span>{{ v.insThaiInsurance ? '✓' : '✗' }}</span> ไทยประกัน
-                            </span>
-                            <span :class="v.insInsurance ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
-                              <span>{{ v.insInsurance ? '✓' : '✗' }}</span> คุ้มภัย
-                            </span>
-                            <span :class="v.insAkney ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
-                              <span>{{ v.insAkney ? '✓' : '✗' }}</span> อาคเนย์
-                            </span>
-                            <span :class="v.insThewet ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
-                              <span>{{ v.insThewet ? '✓' : '✗' }}</span> เทเวศ
-                            </span>
-                            <span :class="v.insBangkokInsurance ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1">
-                              <span>{{ v.insBangkokInsurance ? '✓' : '✗' }}</span> กรุงเทพ
-                            </span>
+                            <span :class="v.insLmg ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1"><span>{{ v.insLmg ? '✓' : '✗' }}</span> LMG</span>
+                            <span :class="v.insViriya ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1"><span>{{ v.insViriya ? '✓' : '✗' }}</span> วิริยะ</span>
+                            <span :class="v.insThaiInsurance ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1"><span>{{ v.insThaiInsurance ? '✓' : '✗' }}</span> ไทยประกัน</span>
+                            <span :class="v.insInsurance ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1"><span>{{ v.insInsurance ? '✓' : '✗' }}</span> คุ้มภัย</span>
+                            <span :class="v.insAkney ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1"><span>{{ v.insAkney ? '✓' : '✗' }}</span> อาคเนย์</span>
+                            <span :class="v.insThewet ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1"><span>{{ v.insThewet ? '✓' : '✗' }}</span> เทเวศ</span>
+                            <span :class="v.insBangkokInsurance ? 'text-emerald-600' : 'text-slate-300'" class="flex items-center gap-1 col-span-2"><span>{{ v.insBangkokInsurance ? '✓' : '✗' }}</span> กรุงเทพ</span>
                           </div>
+                        </div>
+                      </div>
+
+                      <!-- Col 4: แก๊ส -->
+                      <div class="space-y-3">
+                        <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">แก๊ส</p>
+                        <div class="space-y-1.5 text-xs">
+                          <div class="flex gap-3">
+                            <span :class="v.gasNgv ? 'text-emerald-600 font-semibold' : 'text-slate-300'" class="flex items-center gap-1"><span>{{ v.gasNgv ? '✓' : '✗' }}</span> NGV</span>
+                            <span :class="v.gasLpg ? 'text-emerald-600 font-semibold' : 'text-slate-300'" class="flex items-center gap-1"><span>{{ v.gasLpg ? '✓' : '✗' }}</span> LPG</span>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <span :class="expiryChip(v.gasExpiry)" class="text-[10px] font-bold px-2 py-0.5 rounded-md">{{ expiryShortLabel(v.gasExpiry, 'แก๊ส') }}</span>
+                          </div>
+                          <div class="flex items-baseline gap-2">
+                            <span class="text-slate-400 dark:text-slate-500 shrink-0 w-20">วันหมดอายุ</span>
+                            <span class="font-semibold" :class="v.gasExpiry ? (expiryStatus(v.gasExpiry) === 'expired' ? 'text-red-600' : expiryStatus(v.gasExpiry) === 'warning' ? 'text-amber-600' : 'text-emerald-600') : 'text-slate-400'">{{ v.gasExpiry ? fmtDate(v.gasExpiry) : 'ไม่ระบุ' }}</span>
+                          </div>
+                          <div v-if="v.gasContact" class="flex items-center gap-1.5 text-blue-600 font-medium">
+                            <PhoneIcon class="w-3 h-3 shrink-0" />
+                            <a :href="`tel:${v.gasContact}`" class="hover:underline" @click.stop>{{ v.gasContact }}</a>
+                          </div>
+                          <button v-if="v.gasDoc" @click.stop="openDoc(v.gasDoc)" class="flex items-center gap-1 text-[10px] text-blue-600 hover:underline">
+                            <PaperClipIcon class="w-3 h-3" /> ดูเอกสารแก๊ส
+                          </button>
                         </div>
                       </div>
 
@@ -440,6 +479,18 @@
                     <InfoItem label="วันหมดอายุประกัน"
                       :value="detailVehicle.insExpiry ? fmtDate(detailVehicle.insExpiry) : null" />
                     <InfoItem label="เบอร์ติดต่อประกัน" :value="detailVehicle.insContact" />
+                  </div>
+                </div>
+
+                <div v-if="detailVehicle.gasNgv || detailVehicle.gasLpg || detailVehicle.gasExpiry || detailVehicle.gasContact"
+                  class="border-t dark:border-slate-700 pt-4">
+                  <h4 class="font-semibold text-slate-700 dark:text-slate-200 text-sm mb-2">แก๊ส</h4>
+                  <div class="grid grid-cols-2 gap-2 text-xs">
+                    <BoolItem label="NGV" :val="detailVehicle.gasNgv" />
+                    <BoolItem label="LPG" :val="detailVehicle.gasLpg" />
+                    <InfoItem label="วันหมดอายุ"
+                      :value="detailVehicle.gasExpiry ? fmtDate(detailVehicle.gasExpiry) : null" />
+                    <InfoItem label="เบอร์ติดต่อ" :value="detailVehicle.gasContact" />
                   </div>
                 </div>
               </div>
@@ -575,6 +626,22 @@
                       <AppSelect v-model="form.status" :options="vehicleStatusOptions" :allow-empty="false" />
                     </div>
                     <FormInput v-model="form.taxRenewalDate" label="รอบต่อภาษี" type="date" />
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">เอกสารภาษี</label>
+                      <div v-if="(form.taxDocUrl && !docClear.tax) || docFiles.tax" class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl px-3 py-2">
+                        <PaperClipIcon class="w-4 h-4 text-blue-600 shrink-0" />
+                        <span class="text-xs text-blue-700 dark:text-blue-300 flex-1 truncate">{{ docFiles.tax ? docFiles.tax.name : 'มีเอกสารแนบ' }}</span>
+                        <button v-if="form.taxDocUrl && !docClear.tax && !docFiles.tax" type="button" @click="openDoc(form.taxDocUrl)" class="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                          <ArrowTopRightOnSquareIcon class="w-3.5 h-3.5" /> ดู
+                        </button>
+                        <button type="button" @click="docFiles.tax ? clearDocNew('tax') : removeExistingDoc('tax')" class="text-xs text-red-500 hover:text-red-700">ลบ</button>
+                      </div>
+                      <label v-else class="flex items-center gap-2 cursor-pointer border-2 border-dashed border-blue-200 dark:border-blue-800/50 rounded-xl px-3 py-2.5 hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition">
+                        <PaperClipIcon class="w-4 h-4 text-slate-400" />
+                        <span class="text-xs text-slate-400 dark:text-slate-500">แนบไฟล์ภาษี (รูปหรือ PDF)</span>
+                        <input type="file" accept="image/*,.pdf" class="hidden" data-doc-input="tax" @change="onDocChange('tax', $event)" />
+                      </label>
+                    </div>
 
                     <!-- รูปยานพาหนะ -->
                     <div class="sm:col-span-2">
@@ -624,6 +691,22 @@
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                     <FormInput v-model="form.prbExpiry" label="วันหมดอายุ พ.ร.บ." type="date" />
                     <FormInput v-model="form.prbContact" label="เบอร์ติดต่อ พ.ร.บ." placeholder="เช่น 02-xxx-xxxx" />
+                    <div class="sm:col-span-2">
+                      <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">เอกสาร พ.ร.บ.</label>
+                      <div v-if="(form.prbDocUrl && !docClear.prb) || docFiles.prb" class="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl px-3 py-2">
+                        <PaperClipIcon class="w-4 h-4 text-amber-600 shrink-0" />
+                        <span class="text-xs text-amber-700 dark:text-amber-300 flex-1 truncate">{{ docFiles.prb ? docFiles.prb.name : 'มีเอกสารแนบ' }}</span>
+                        <button v-if="form.prbDocUrl && !docClear.prb && !docFiles.prb" type="button" @click="openDoc(form.prbDocUrl)" class="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                          <ArrowTopRightOnSquareIcon class="w-3.5 h-3.5" /> ดู
+                        </button>
+                        <button type="button" @click="docFiles.prb ? clearDocNew('prb') : removeExistingDoc('prb')" class="text-xs text-red-500 hover:text-red-700">ลบ</button>
+                      </div>
+                      <label v-else class="flex items-center gap-2 cursor-pointer border-2 border-dashed border-amber-200 dark:border-amber-800/50 rounded-xl px-3 py-2.5 hover:border-amber-400 hover:bg-amber-50/50 dark:hover:bg-amber-900/20 transition">
+                        <PaperClipIcon class="w-4 h-4 text-slate-400" />
+                        <span class="text-xs text-slate-400 dark:text-slate-500">แนบไฟล์เอกสาร (รูปหรือ PDF)</span>
+                        <input type="file" accept="image/*,.pdf" class="hidden" data-doc-input="prb" @change="onDocChange('prb', $event)" />
+                      </label>
+                    </div>
                   </div>
                 </fieldset>
 
@@ -644,6 +727,53 @@
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                     <FormInput v-model="form.insExpiry" label="วันหมดอายุประกัน" type="date" />
                     <FormInput v-model="form.insContact" label="เบอร์ติดต่อประกัน" placeholder="เช่น 02-xxx-xxxx" />
+                    <div class="sm:col-span-2">
+                      <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">เอกสารประกัน</label>
+                      <div v-if="(form.insDocUrl && !docClear.ins) || docFiles.ins" class="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 rounded-xl px-3 py-2">
+                        <PaperClipIcon class="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span class="text-xs text-emerald-700 dark:text-emerald-300 flex-1 truncate">{{ docFiles.ins ? docFiles.ins.name : 'มีเอกสารแนบ' }}</span>
+                        <button v-if="form.insDocUrl && !docClear.ins && !docFiles.ins" type="button" @click="openDoc(form.insDocUrl)" class="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                          <ArrowTopRightOnSquareIcon class="w-3.5 h-3.5" /> ดู
+                        </button>
+                        <button type="button" @click="docFiles.ins ? clearDocNew('ins') : removeExistingDoc('ins')" class="text-xs text-red-500 hover:text-red-700">ลบ</button>
+                      </div>
+                      <label v-else class="flex items-center gap-2 cursor-pointer border-2 border-dashed border-emerald-200 dark:border-emerald-800/50 rounded-xl px-3 py-2.5 hover:border-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition">
+                        <PaperClipIcon class="w-4 h-4 text-slate-400" />
+                        <span class="text-xs text-slate-400 dark:text-slate-500">แนบไฟล์เอกสาร (รูปหรือ PDF)</span>
+                        <input type="file" accept="image/*,.pdf" class="hidden" data-doc-input="ins" @change="onDocChange('ins', $event)" />
+                      </label>
+                    </div>
+                  </div>
+                </fieldset>
+
+                <!-- แก๊ส -->
+                <fieldset class="bg-orange-50/40 dark:bg-orange-900/10 rounded-2xl p-4">
+                  <legend class="text-sm font-bold text-orange-700 dark:text-orange-400 mb-3 flex items-center gap-1.5">
+                    <FireIcon class="w-4 h-4 text-orange-500" /> แก๊ส
+                  </legend>
+                  <div class="flex gap-4 mb-3">
+                    <FormCheck v-model="form.gasNgv" label="NGV" />
+                    <FormCheck v-model="form.gasLpg" label="LPG" />
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <FormInput v-model="form.gasExpiry" label="วันหมดอายุ" type="date" />
+                    <FormInput v-model="form.gasContact" label="เบอร์ติดต่อ" placeholder="เช่น 02-xxx-xxxx" />
+                    <div class="sm:col-span-2">
+                      <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">เอกสารแก๊ส</label>
+                      <div v-if="(form.gasDocUrl && !docClear.gas) || docFiles.gas" class="flex items-center gap-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-xl px-3 py-2">
+                        <PaperClipIcon class="w-4 h-4 text-orange-600 shrink-0" />
+                        <span class="text-xs text-orange-700 dark:text-orange-300 flex-1 truncate">{{ docFiles.gas ? docFiles.gas.name : 'มีเอกสารแนบ' }}</span>
+                        <button v-if="form.gasDocUrl && !docClear.gas && !docFiles.gas" type="button" @click="openDoc(form.gasDocUrl)" class="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                          <ArrowTopRightOnSquareIcon class="w-3.5 h-3.5" /> ดู
+                        </button>
+                        <button type="button" @click="docFiles.gas ? clearDocNew('gas') : removeExistingDoc('gas')" class="text-xs text-red-500 hover:text-red-700">ลบ</button>
+                      </div>
+                      <label v-else class="flex items-center gap-2 cursor-pointer border-2 border-dashed border-orange-200 dark:border-orange-800/50 rounded-xl px-3 py-2.5 hover:border-orange-400 hover:bg-orange-50/50 dark:hover:bg-orange-900/20 transition">
+                        <PaperClipIcon class="w-4 h-4 text-slate-400" />
+                        <span class="text-xs text-slate-400 dark:text-slate-500">แนบไฟล์เอกสาร (รูปหรือ PDF)</span>
+                        <input type="file" accept="image/*,.pdf" class="hidden" data-doc-input="gas" @change="onDocChange('gas', $event)" />
+                      </label>
+                    </div>
                   </div>
                 </fieldset>
 
@@ -672,7 +802,7 @@ import {
   TruckIcon, PlusCircleIcon, PencilSquareIcon, TrashIcon, MagnifyingGlassIcon,
   XCircleIcon, XMarkIcon, EyeIcon, FunnelIcon, DocumentTextIcon, ShieldCheckIcon,
   ArrowDownTrayIcon, ArrowUpTrayIcon, QrCodeIcon, PrinterIcon, CameraIcon, PhotoIcon,
-  ChevronDownIcon, PhoneIcon
+  ChevronDownIcon, PhoneIcon, FireIcon, PaperClipIcon, ArrowTopRightOnSquareIcon
 } from '@heroicons/vue/24/outline'
 import QRCode from 'qrcode'
 import AppSelect from '../components/AppSelect.vue'
@@ -821,6 +951,31 @@ function clearVehiclePhoto() {
   photoPreview.value = null
 }
 
+const docFiles = ref({ prb: null, tax: null, ins: null, gas: null })
+const docClear = ref({ prb: false, tax: false, ins: false, gas: false })
+
+function onDocChange(key, e) {
+  const file = e.target.files[0]
+  if (!file) return
+  docFiles.value[key] = file
+  docClear.value[key] = false
+}
+
+function clearDocNew(key) {
+  docFiles.value[key] = null
+  const input = document.querySelector(`[data-doc-input="${key}"]`)
+  if (input) input.value = ''
+}
+
+function removeExistingDoc(key) {
+  docClear.value[key] = true
+  docFiles.value[key] = null
+}
+
+function openDoc(url) {
+  window.open(resolveUrl(url), '_blank')
+}
+
 // --- QR ---
 const showQrModal = ref(false)
 const qrVehicle = ref(null)
@@ -891,7 +1046,9 @@ const defaultForm = () => ({
   currentMileage: '', nextMileage: '', overMileage: '', status: 'ACTIVE', note: '',
   prbDate: '', prbLmg: false, prbViriya: false, prbAkney: false, prbThewet: false, prbInsurance: false, prbBangkokInsurance: false, prbTaxDate: '', prbThirdParty: false, prbExpiry: '', prbContact: '',
   insLmg: false, insViriya: false, insThaiInsurance: false, insInsurance: false, insAkney: false, insThewet: false, insBangkokInsurance: false, insDate: '', insTaxDate: '', insExpiry: '', insContact: '',
-  taxRenewalDate: ''
+  taxRenewalDate: '',
+  gasNgv: false, gasLpg: false, gasExpiry: '', gasContact: '',
+  prbDocUrl: '', taxDocUrl: '', insDocUrl: '', gasDocUrl: ''
 })
 const form = ref(defaultForm())
 
@@ -955,6 +1112,8 @@ function openDetail(v) { detailVehicle.value = v }
 
 function openForm(v) {
   photoFile.value = null
+  docFiles.value = { prb: null, tax: null, ins: null, gas: null }
+  docClear.value = { prb: false, tax: false, ins: false, gas: false }
   if (v) {
     editingVehicle.value = v
     photoPreview.value = v.photo ? resolveUrl(v.photo) : null
@@ -972,6 +1131,10 @@ function openForm(v) {
     f.lpPrefix = parsed.prefix
     f.lpNumber = parsed.number
     f.lpProvince = parsed.province
+    f.prbDocUrl = v.prbDoc || ''
+    f.taxDocUrl = v.taxDoc || ''
+    f.insDocUrl = v.insDoc || ''
+    f.gasDocUrl = v.gasDoc || ''
     form.value = f
   } else {
     editingVehicle.value = null
@@ -989,7 +1152,7 @@ async function saveVehicle() {
   saving.value = true
   try {
     const fd = new FormData()
-    const skipKeys = new Set(['lpPrefix', 'lpNumber', 'lpProvince'])
+    const skipKeys = new Set(['lpPrefix', 'lpNumber', 'lpProvince', 'prbDocUrl', 'taxDocUrl', 'insDocUrl', 'gasDocUrl'])
     for (const [key, val] of Object.entries(form.value)) {
       if (skipKeys.has(key)) continue
       if (val !== null && val !== undefined && val !== '') fd.append(key, val)
@@ -1000,6 +1163,16 @@ async function saveVehicle() {
       fd.append('photo', photoFile.value)
     } else if (editingVehicle.value && !photoPreview.value && editingVehicle.value.photo) {
       fd.append('clearPhoto', 'true')
+    }
+
+    // Document files
+    const docMap = { prb: 'prbDoc', tax: 'taxDoc', ins: 'insDoc', gas: 'gasDoc' }
+    for (const [key, field] of Object.entries(docMap)) {
+      if (docFiles.value[key]) {
+        fd.append(field, docFiles.value[key])
+      } else if (docClear.value[key]) {
+        fd.append('clear' + field.charAt(0).toUpperCase() + field.slice(1), 'true')
+      }
     }
 
     if (editingVehicle.value) {

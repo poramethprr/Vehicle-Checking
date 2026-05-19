@@ -568,6 +568,7 @@ onMounted(async () => {
         { key: `${v.id}-prb`, field: v.prbExpiry,     label: 'พ.ร.บ. หมดอายุ' },
         { key: `${v.id}-ins`, field: v.insExpiry,      label: 'ประกันภัย หมดอายุ' },
         { key: `${v.id}-tax`, field: v.taxRenewalDate, label: 'ต่อภาษีรถ ครบกำหนด' },
+        { key: `${v.id}-gas`, field: v.gasExpiry,      label: 'แก๊ส หมดอายุ' },
       ]
       for (const c of checks) {
         if (!c.field) continue

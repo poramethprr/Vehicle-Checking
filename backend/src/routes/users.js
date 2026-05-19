@@ -75,7 +75,7 @@ router.get('/:id', async (req, res) => {
 // Update user
 router.put('/:id', upload.single('licensePhoto'), async (req, res) => {
   try {
-    const { username, displayName, phone, role, password, actionUserId, licenseNumber, licenseExpiry, removeLicensePhoto } = req.body
+    const { username, displayName, phone, role, password, actionUserId, licenseNumber, licenseExpiry, removeLicensePhoto, microsoftEmail, requireMicrosoftSSO } = req.body
 
     const existing = await prisma.user.findUnique({ where: { id: Number(req.params.id) } })
     if (!existing) return res.status(404).json({ error: 'ไม่พบผู้ใช้' })
@@ -99,6 +99,17 @@ router.put('/:id', upload.single('licensePhoto'), async (req, res) => {
 
     if (password) {
       data.password = await bcrypt.hash(password, 10)
+    }
+
+    if (microsoftEmail !== undefined) {
+      data.microsoftEmail = microsoftEmail || null
+    }
+    if (requireMicrosoftSSO !== undefined) {
+      data.requireMicrosoftSSO = requireMicrosoftSSO === 'true' || requireMicrosoftSSO === true
+      // If enabling SSO-only, clear password
+      if (data.requireMicrosoftSSO) {
+        data.password = null
+      }
     }
 
     const user = await prisma.user.update({ where: { id: Number(req.params.id) }, data })

@@ -9,6 +9,13 @@ const { uploadToBlob, deleteFromBlob } = require('../services/azureBlob')
 
 const upload = multer({ storage: multer.memoryStorage() })
 const photoUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } })
+const docUpload = photoUpload.fields([
+  { name: 'photo', maxCount: 1 },
+  { name: 'prbDoc', maxCount: 1 },
+  { name: 'taxDoc', maxCount: 1 },
+  { name: 'insDoc', maxCount: 1 },
+  { name: 'gasDoc', maxCount: 1 },
+])
 
 // Helper functions
 function mapStatus(statusText) {
@@ -486,57 +493,71 @@ router.get('/:id', async (req, res) => {
 })
 
 // Create vehicle
-router.post('/', photoUpload.single('photo'), async (req, res) => {
-  let photoUrl = null
+router.post('/', docUpload, async (req, res) => {
+  const uploaded = {}
   try {
     const data = pickVehicleData(req.body)
     if (!data.type || !data.licensePlate) {
       return res.status(400).json({ error: 'กรุณากรอกประเภทรถและทะเบียน' })
     }
-    if (req.file) {
-      photoUrl = await uploadToBlob(req.file.buffer, req.file.originalname, 'vehicle-')
-      data.photo = photoUrl
+    const files = req.files || {}
+    for (const field of ['photo', 'prbDoc', 'taxDoc', 'insDoc', 'gasDoc']) {
+      if (files[field]?.[0]) {
+        const prefix = field === 'photo' ? 'vehicle-' : 'vehicle-doc-'
+        const url = await uploadToBlob(files[field][0].buffer, files[field][0].originalname, prefix)
+        data[field] = uploaded[field] = url
+      }
     }
-
     const vehicle = await prisma.vehicle.create({ data })
-
     if (req.body.userId) {
       await logActivity(req.body.userId, 'CREATE_VEHICLE', `เพิ่มยานพาหนะ ${data.type} ทะเบียน ${data.licensePlate}`, 'Vehicle', vehicle.id)
     }
-
     res.json(vehicle)
   } catch (err) {
-    if (photoUrl) deletePhotoFile(photoUrl)
+    for (const url of Object.values(uploaded)) deletePhotoFile(url)
     if (err.code === 'P2002') return res.status(400).json({ error: 'ทะเบียนนี้มีอยู่ในระบบแล้ว' })
     res.status(500).json({ error: err.message })
   }
 })
 
 // Update vehicle
-router.put('/:id', photoUpload.single('photo'), async (req, res) => {
-  let newPhotoUrl = null
+router.put('/:id', docUpload, async (req, res) => {
+  const newUploads = {}
   try {
     const existing = await prisma.vehicle.findUnique({ where: { id: Number(req.params.id) } })
     const data = pickVehicleData(req.body)
+    const files = req.files || {}
 
-    if (req.file) {
+    // photo
+    if (files.photo?.[0]) {
       if (existing?.photo) deletePhotoFile(existing.photo)
-      newPhotoUrl = await uploadToBlob(req.file.buffer, req.file.originalname, 'vehicle-')
-      data.photo = newPhotoUrl
+      const url = await uploadToBlob(files.photo[0].buffer, files.photo[0].originalname, 'vehicle-')
+      data.photo = newUploads.photo = url
     } else if (req.body.clearPhoto === 'true') {
       if (existing?.photo) deletePhotoFile(existing.photo)
       data.photo = null
     }
 
-    const vehicle = await prisma.vehicle.update({ where: { id: Number(req.params.id) }, data })
+    // documents
+    for (const field of ['prbDoc', 'taxDoc', 'insDoc', 'gasDoc']) {
+      const clearKey = 'clear' + field.charAt(0).toUpperCase() + field.slice(1)
+      if (files[field]?.[0]) {
+        if (existing?.[field]) deletePhotoFile(existing[field])
+        const url = await uploadToBlob(files[field][0].buffer, files[field][0].originalname, 'vehicle-doc-')
+        data[field] = newUploads[field] = url
+      } else if (req.body[clearKey] === 'true') {
+        if (existing?.[field]) deletePhotoFile(existing[field])
+        data[field] = null
+      }
+    }
 
+    const vehicle = await prisma.vehicle.update({ where: { id: Number(req.params.id) }, data })
     if (req.body.userId) {
       await logActivity(req.body.userId, 'UPDATE_VEHICLE', `แก้ไขยานพาหนะ ${vehicle.type} ทะเบียน ${vehicle.licensePlate}`, 'Vehicle', vehicle.id)
     }
-
     res.json(vehicle)
   } catch (err) {
-    if (newPhotoUrl) deletePhotoFile(newPhotoUrl)
+    for (const url of Object.values(newUploads)) deletePhotoFile(url)
     res.status(500).json({ error: err.message })
   }
 })
@@ -546,7 +567,9 @@ router.delete('/:id', async (req, res) => {
   try {
     const { userId } = req.body
     const vehicle = await prisma.vehicle.findUnique({ where: { id: Number(req.params.id) } })
-    if (vehicle?.photo) deletePhotoFile(vehicle.photo)
+    for (const field of ['photo', 'prbDoc', 'taxDoc', 'insDoc', 'gasDoc']) {
+      if (vehicle?.[field]) deletePhotoFile(vehicle[field])
+    }
 
     await prisma.vehicle.delete({ where: { id: Number(req.params.id) } })
 

@@ -2,7 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
   { path: '/login', name: 'Login', component: () => import('../views/Login.vue') },
-  { path: '/register', name: 'Register', component: () => import('../views/Register.vue') },
+  { path: '/register', redirect: '/login' },
+  { path: '/microsoft-callback', name: 'MicrosoftCallback', component: () => import('../views/MicrosoftCallback.vue') },
   { path: '/', name: 'Dashboard', component: () => import('../views/Dashboard.vue'), meta: { requiresAuth: true } },
   { path: '/inspection', name: 'Inspection', component: () => import('../views/Inspection.vue'), meta: { requiresAuth: true, vehicleOnly: true } },
   { path: '/reports', name: 'Reports', component: () => import('../views/Reports.vue'), meta: { requiresAuth: true, requiresDriverOrAdmin: true } },
@@ -40,8 +41,8 @@ router.beforeEach((to, from, next) => {
   const user = JSON.parse(localStorage.getItem('user') || 'null')
 
   if (to.meta.requiresAuth && !user) {
-    next('/login')
-  } else if ((to.path === '/login' || to.path === '/register') && user) {
+    next('/login?redirect=' + encodeURIComponent(to.fullPath))
+  } else if ((to.path === '/login' || to.path === '/register' || to.path === '/microsoft-callback') && user) {
     next(user.role === 'MAID' ? '/maid' : '/')
   } else if (to.meta.requiresAdmin && user?.role !== 'ADMIN') {
     next(user?.role === 'MAID' ? '/maid' : '/')

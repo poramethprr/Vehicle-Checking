@@ -42,6 +42,7 @@ enum RenewalType {
   PRB
   TAX
   INS
+  GAS
 }
 
 enum RepairStatus {
@@ -63,6 +64,11 @@ model User {
   licensePhoto    String?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+  microsoftId         String?  @unique
+  microsoftEmail      String?  @unique
+  requireMicrosoftSSO Boolean  @default(false)
+
+  @@index([microsoftEmail])
 
   inspections          Inspection[]
   activityLogs         ActivityLog[]
@@ -119,6 +125,18 @@ model Vehicle {
   insContact            String?
 
   taxRenewalDate  DateTime?
+
+  // แก๊ส
+  gasNgv          Boolean   @default(false)
+  gasLpg          Boolean   @default(false)
+  gasExpiry       DateTime?
+  gasContact      String?
+
+  prbDoc    String?
+  taxDoc    String?
+  insDoc    String?
+  gasDoc    String?
+
   photo           String?
 
   createdAt       DateTime       @default(now())
