@@ -4,31 +4,51 @@ const prisma = require('../services/prisma')
 const { logActivity } = require('../services/logger')
 const INSPECTION_ITEMS = require('../services/inspectionItems')
 
-// Get all inspections (with filters)
+// Get all inspections (with filters + pagination)
 router.get('/', async (req, res) => {
   try {
-    const { vehicleId, month, year } = req.query
+    const { vehicleId, month, year, startDate, endDate, page, limit } = req.query
     const where = {}
 
-    if (vehicleId) where.vehicleId = Number(vehicleId)
-
-    if (month && year) {
-      const startDate = new Date(Number(year), Number(month) - 1, 1)
-      const endDate = new Date(Number(year), Number(month), 0, 23, 59, 59)
-      where.inspectionDate = { gte: startDate, lte: endDate }
+    if (vehicleId) {
+      const ids = Array.isArray(vehicleId) ? vehicleId : vehicleId.split(',')
+      const numIds = ids.map(Number).filter(Boolean)
+      where.vehicleId = numIds.length === 1 ? numIds[0] : { in: numIds }
     }
 
-    const inspections = await prisma.inspection.findMany({
-      where,
-      include: {
-        vehicle: true,
-        user: { select: { id: true, username: true, phone: true } },
-        details: { orderBy: { itemNumber: 'asc' } }
-      },
-      orderBy: { inspectionDate: 'desc' }
-    })
+    if (month && year) {
+      const s = new Date(Number(year), Number(month) - 1, 1)
+      const e = new Date(Number(year), Number(month), 0, 23, 59, 59)
+      where.inspectionDate = { gte: s, lte: e }
+    } else if (startDate || endDate) {
+      where.inspectionDate = {}
+      if (startDate) where.inspectionDate.gte = new Date(startDate)
+      if (endDate) { const e = new Date(endDate); e.setHours(23,59,59); where.inspectionDate.lte = e }
+    }
 
-    res.json(inspections)
+    const take = limit ? Math.min(Number(limit), 200) : undefined
+    const currentPage = Number(page) || 1
+    const skip = take ? (currentPage - 1) * take : undefined
+
+    const [inspections, total] = await Promise.all([
+      prisma.inspection.findMany({
+        where,
+        include: {
+          vehicle: true,
+          user: { select: { id: true, username: true, displayName: true, phone: true } },
+          details: { orderBy: { itemNumber: 'asc' } }
+        },
+        orderBy: { inspectionDate: 'desc' },
+        ...(take !== undefined ? { take, skip } : {})
+      }),
+      prisma.inspection.count({ where })
+    ])
+
+    if (page || limit) {
+      res.json({ inspections, total, page: currentPage, totalPages: take ? Math.ceil(total / take) : 1 })
+    } else {
+      res.json(inspections)
+    }
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -41,7 +61,7 @@ router.get('/:id', async (req, res) => {
       where: { id: Number(req.params.id) },
       include: {
         vehicle: true,
-        user: { select: { id: true, username: true, phone: true } },
+        user: { select: { id: true, username: true, displayName: true, phone: true } },
         details: { orderBy: { itemNumber: 'asc' } }
       }
     })

@@ -4,6 +4,7 @@ const ExcelJS = require('exceljs')
 const PDFDocument = require('pdfkit')
 const prisma = require('../services/prisma')
 const INSPECTION_ITEMS = require('../services/inspectionItems')
+const { blobNameFromUrl, generateSasUrl } = require('../services/azureBlob')
 const path = require('path')
 const fs = require('fs')
 
@@ -12,6 +13,21 @@ const SGSISO_PATH = path.join(__dirname, '..', 'images', 'SGSISO.jpg')
 
 const THAI_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
   'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
+
+// Generate a 7-day SAS URL suitable for embedding in exported files
+function toExportUrl(url) {
+  if (!url || !url.startsWith('https://')) return null
+  try {
+    const name = blobNameFromUrl(url)
+    return name ? generateSasUrl(name, 7 * 24) : null
+  } catch { return null }
+}
+
+// Returns an ExcelJS hyperlink object, or '' if no URL
+function photoCell(url) {
+  const link = toExportUrl(url)
+  return link ? { text: 'ดูรูป', hyperlink: link } : ''
+}
 
 async function getMonthlyData(vehicleId, month, year) {
   const startDate = new Date(Number(year), Number(month) - 1, 1)
@@ -490,6 +506,633 @@ router.get('/pdf', async (req, res) => {
     doc.end()
   } catch (err) {
     console.error('PDF export error:', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ─── helpers ────────────────────────────────────────────────────────────────
+const thinB = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } }
+
+function excelHeader(ws, fill = 'FFBDD7EE') {
+  const colCount = ws.columns.length
+  const row = ws.getRow(1)
+  row.height = 24
+  for (let c = 1; c <= colCount; c++) {
+    const cell = row.getCell(c)
+    cell.font = { bold: true, name: 'TH Sarabun New', size: 12 }
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fill } }
+    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }
+    cell.border = thinB
+  }
+}
+
+function styleDataRows(ws, startRow = 2) {
+  const colCount = ws.columns.length
+  ws.eachRow((row, rn) => {
+    if (rn < startRow) return
+    row.height = 18
+    for (let c = 1; c <= colCount; c++) {
+      const cell = row.getCell(c)
+      const isLink = cell.value && typeof cell.value === 'object' && cell.value.hyperlink
+      cell.font = isLink
+        ? { name: 'TH Sarabun New', size: 11, color: { argb: 'FF0563C1' }, underline: true }
+        : { name: 'TH Sarabun New', size: 11 }
+      cell.alignment = { vertical: 'middle', wrapText: true }
+      cell.border = thinB
+    }
+  })
+}
+
+function fillRow(row, colCount, argb) {
+  for (let c = 1; c <= colCount; c++) {
+    row.getCell(c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb } }
+  }
+}
+
+function sendExcel(res, wb, filename) {
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`)
+  return wb.xlsx.write(res).then(() => res.end())
+}
+
+const fmtD = d => d ? new Date(d).toLocaleDateString('th-TH') : ''
+const fmtDT = d => d ? new Date(d).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : ''
+
+// ─── Export: Bookings ────────────────────────────────────────────────────────
+router.get('/bookings', async (req, res) => {
+  try {
+    const { startDate, endDate, vehicleId, status } = req.query
+    const where = {}
+    if (vehicleId) where.vehicleId = Number(vehicleId)
+    if (status) where.status = status
+    if (startDate || endDate) {
+      where.checkoutDate = {}
+      if (startDate) where.checkoutDate.gte = new Date(startDate)
+      if (endDate) where.checkoutDate.lte = new Date(endDate + 'T23:59:59')
+    }
+
+    const bookings = await prisma.booking.findMany({
+      where,
+      include: {
+        vehicle: { select: { type: true, licensePlate: true } },
+        requester: { select: { displayName: true, username: true } },
+        driver: { select: { displayName: true, username: true } }
+      },
+      orderBy: { checkoutDate: 'asc' }
+    })
+
+    const wb = new ExcelJS.Workbook()
+    const ws = wb.addWorksheet('รายงานการเบิก-คืนรถ')
+    ws.columns = [
+      { header: 'ลำดับ',           key: 'no',          width: 6  },
+      { header: 'วันที่เบิก',       key: 'checkoutDate', width: 18 },
+      { header: 'ยานพาหนะ',        key: 'vehicle',      width: 16 },
+      { header: 'ทะเบียน',          key: 'plate',        width: 14 },
+      { header: 'สถานที่ปลายทาง',   key: 'destination',  width: 24 },
+      { header: 'วัตถุประสงค์',     key: 'purpose',      width: 20 },
+      { header: 'ผู้เบิก',          key: 'requester',    width: 16 },
+      { header: 'คนขับ',            key: 'driver',       width: 16 },
+      { header: 'ไมล์ออก (กม.)',    key: 'mileageOut',   width: 13 },
+      { header: 'ไมล์เข้า (กม.)',   key: 'mileageIn',    width: 13 },
+      { header: 'ระยะทาง (กม.)',    key: 'distance',     width: 14 },
+      { header: 'วันที่คืน',        key: 'returnDate',   width: 18 },
+      { header: 'สถานะ',            key: 'status',       width: 14 },
+      { header: 'หมายเหตุ',         key: 'note',         width: 22 },
+      { header: 'รูปไมล์ออก',       key: 'photoOut',     width: 12 },
+      { header: 'รูปไมล์เข้า',      key: 'photoIn',      width: 12 },
+    ]
+
+    const SL = { CHECKED_OUT: 'กำลังใช้งาน', RETURNED: 'คืนแล้ว', CANCELLED: 'ยกเลิก' }
+    bookings.forEach((b, i) => ws.addRow({
+      no: i + 1,
+      checkoutDate: fmtDT(b.checkoutDate),
+      vehicle: b.vehicle.type,
+      plate: b.vehicle.licensePlate,
+      destination: b.destination,
+      purpose: b.purpose || '',
+      requester: b.requester.displayName || b.requester.username,
+      driver: b.driver.displayName || b.driver.username,
+      mileageOut: b.mileageOut,
+      mileageIn: b.mileageIn ?? '',
+      distance: b.distance ?? '',
+      returnDate: fmtDT(b.returnDate),
+      status: SL[b.status] || b.status,
+      note: b.returnNote || '',
+      photoOut: photoCell(b.mileageOutPhoto),
+      photoIn: photoCell(b.mileageInPhoto),
+    }))
+
+    excelHeader(ws, 'FFBDD7EE')
+    styleDataRows(ws)
+    await sendExcel(res, wb, `bookings_${new Date().toISOString().slice(0, 10)}.xlsx`)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ─── Export: Fuel Logs ───────────────────────────────────────────────────────
+router.get('/fuels', async (req, res) => {
+  try {
+    const { startDate, endDate, vehicleId } = req.query
+    const where = {}
+    if (vehicleId) where.vehicleId = Number(vehicleId)
+    if (startDate || endDate) {
+      where.createdAt = {}
+      if (startDate) where.createdAt.gte = new Date(startDate)
+      if (endDate) where.createdAt.lte = new Date(endDate + 'T23:59:59')
+    }
+
+    const fuels = await prisma.fuelLog.findMany({
+      where,
+      include: {
+        vehicle: { select: { type: true, licensePlate: true } },
+        user: { select: { displayName: true, username: true } }
+      },
+      orderBy: { createdAt: 'asc' }
+    })
+
+    const wb = new ExcelJS.Workbook()
+    const ws = wb.addWorksheet('รายงานเติมน้ำมัน')
+    ws.columns = [
+      { header: 'ลำดับ',          key: 'no',         width: 6  },
+      { header: 'วันที่',          key: 'date',       width: 18 },
+      { header: 'ยานพาหนะ',       key: 'vehicle',    width: 16 },
+      { header: 'ทะเบียน',         key: 'plate',      width: 14 },
+      { header: 'ไมล์ก่อนเติม',   key: 'mileageBefore', width: 14 },
+      { header: 'ไมล์หลังเติม',   key: 'mileageAfter',  width: 14 },
+      { header: 'ลิตร',            key: 'liters',     width: 10 },
+      { header: 'จำนวนเงิน (บ.)', key: 'amount',     width: 14 },
+      { header: 'ผู้บันทึก',       key: 'user',          width: 16 },
+      { header: 'หมายเหตุ',        key: 'note',          width: 20 },
+      { header: 'รูปไมล์',         key: 'photoMileage',  width: 12 },
+      { header: 'รูปเกจ',          key: 'photoGauge',    width: 12 },
+      { header: 'รูปหัวจ่าย',      key: 'photoPump',     width: 12 },
+      { header: 'รูปใบเสร็จ',      key: 'photoReceipt',  width: 12 },
+    ]
+
+    fuels.forEach((f, i) => ws.addRow({
+      no: i + 1,
+      date: fmtDT(f.createdAt),
+      vehicle: f.vehicle.type,
+      plate: f.vehicle.licensePlate,
+      mileageBefore: f.mileageBefore,
+      mileageAfter: f.mileageAfter ?? '',
+      liters: f.liters,
+      amount: f.amount,
+      user: f.user.displayName || f.user.username,
+      note: f.note || '',
+      photoMileage: photoCell(f.mileagePhotoAfter || f.mileagePhotoBefore),
+      photoGauge: photoCell(f.gaugePhotoAfter || f.gaugePhotoBefore),
+      photoPump: photoCell(f.pumpPhoto),
+      photoReceipt: photoCell(f.receiptPhoto),
+    }))
+
+    // Summary row
+    const totalLiters = fuels.reduce((s, f) => s + f.liters, 0)
+    const totalAmount = fuels.reduce((s, f) => s + f.amount, 0)
+    const sumRow = ws.addRow(['', '', '', 'รวม', '', '', totalLiters.toFixed(2), totalAmount.toFixed(2), '', ''])
+    sumRow.font = { bold: true, name: 'TH Sarabun New', size: 11 }
+    fillRow(sumRow, ws.columns.length, 'FFE2EFDA')
+
+    excelHeader(ws, 'FF9DC3E6')
+    styleDataRows(ws)
+    await sendExcel(res, wb, `fuels_${new Date().toISOString().slice(0, 10)}.xlsx`)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ─── Export: Repair Requests ─────────────────────────────────────────────────
+router.get('/repairs', async (req, res) => {
+  try {
+    const { startDate, endDate, vehicleId, status } = req.query
+    const where = {}
+    if (vehicleId) where.vehicleId = Number(vehicleId)
+    if (status) where.status = status
+    if (startDate || endDate) {
+      where.createdAt = {}
+      if (startDate) where.createdAt.gte = new Date(startDate)
+      if (endDate) where.createdAt.lte = new Date(endDate + 'T23:59:59')
+    }
+
+    const repairs = await prisma.repairRequest.findMany({
+      where,
+      include: {
+        vehicle: { select: { type: true, licensePlate: true } },
+        user: { select: { displayName: true, username: true } },
+        approvedBy: { select: { displayName: true, username: true } }
+      },
+      orderBy: { createdAt: 'asc' }
+    })
+
+    const wb = new ExcelJS.Workbook()
+    const ws = wb.addWorksheet('รายงานแจ้งซ่อม')
+    ws.columns = [
+      { header: 'ลำดับ',          key: 'no',         width: 6  },
+      { header: 'วันที่แจ้ง',      key: 'date',       width: 18 },
+      { header: 'ยานพาหนะ',       key: 'vehicle',    width: 16 },
+      { header: 'ทะเบียน',         key: 'plate',      width: 14 },
+      { header: 'หัวข้อ',          key: 'title',      width: 24 },
+      { header: 'รายละเอียด',      key: 'detail',     width: 30 },
+      { header: 'วงเงิน (บ.)',     key: 'cost',       width: 12 },
+      { header: 'สถานะ',           key: 'status',     width: 14 },
+      { header: 'ผู้แจ้ง',          key: 'user',       width: 16 },
+      { header: 'ผู้อนุมัติ',       key: 'approver',   width: 16 },
+      { header: 'วันที่อนุมัติ',    key: 'approvedAt', width: 18 },
+      { header: 'หมายเหตุผู้อนุมัติ', key: 'approverNote', width: 24 },
+      { header: 'เอกสาร/รูปประกอบ',  key: 'photoDoc',     width: 16 },
+    ]
+
+    const SL = { PENDING: 'รออนุมัติ', APPROVED: 'อนุมัติแล้ว', REJECTED: 'ไม่อนุมัติ', COMPLETED: 'เสร็จสิ้น' }
+    repairs.forEach((r, i) => ws.addRow({
+      no: i + 1,
+      date: fmtDT(r.createdAt),
+      vehicle: r.vehicle.type,
+      plate: r.vehicle.licensePlate,
+      title: r.title,
+      detail: r.detail,
+      cost: r.estimatedCost ?? '',
+      status: SL[r.status] || r.status,
+      user: r.user.displayName || r.user.username,
+      approver: r.approvedBy ? (r.approvedBy.displayName || r.approvedBy.username) : '',
+      approvedAt: fmtDT(r.approvedAt),
+      approverNote: r.approverNote || '',
+      photoDoc: photoCell(r.documentPath),
+    }))
+
+    excelHeader(ws, 'FFFCE4D6')
+    styleDataRows(ws)
+    await sendExcel(res, wb, `repairs_${new Date().toISOString().slice(0, 10)}.xlsx`)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ─── Export: Vehicle Documents Status ───────────────────────────────────────
+router.get('/vehicles-docs', async (req, res) => {
+  try {
+    const { docFilter } = req.query
+    const vehicles = await prisma.vehicle.findMany({ orderBy: { licensePlate: 'asc' } })
+
+    function docStatus(dateStr) {
+      if (!dateStr) return 'none'
+      const days = Math.floor((new Date(dateStr) - new Date()) / 86400000)
+      if (days < 0) return 'expired'
+      if (days <= 30) return 'warning'
+      return 'ok'
+    }
+
+    function docLabel(dateStr) {
+      const s = docStatus(dateStr)
+      if (s === 'none') return 'ไม่ระบุ'
+      const days = Math.floor((new Date(dateStr) - new Date()) / 86400000)
+      if (s === 'expired') return `หมดแล้ว (${Math.abs(days)} วัน)`
+      if (s === 'warning') return `ใกล้หมด (${days} วัน)`
+      return `ปกติ (${days} วัน)`
+    }
+
+    let data = vehicles
+    if (docFilter === 'expired') data = vehicles.filter(v => docStatus(v.prbExpiry) === 'expired' || docStatus(v.taxRenewalDate) === 'expired' || docStatus(v.insExpiry) === 'expired')
+    else if (docFilter === 'warning') data = vehicles.filter(v => ['warning'].includes(docStatus(v.prbExpiry)) || ['warning'].includes(docStatus(v.taxRenewalDate)) || ['warning'].includes(docStatus(v.insExpiry)))
+
+    const wb = new ExcelJS.Workbook()
+    const ws = wb.addWorksheet('สถานะเอกสารยานพาหนะ')
+    ws.columns = [
+      { header: 'ลำดับ',           key: 'no',         width: 6  },
+      { header: 'ประเภท',          key: 'type',       width: 18 },
+      { header: 'ทะเบียน',          key: 'plate',      width: 16 },
+      { header: 'สถานะรถ',          key: 'status',     width: 14 },
+      { header: 'วันหมดอายุ พ.ร.บ.', key: 'prbExpiry', width: 18 },
+      { header: 'สถานะ พ.ร.บ.',     key: 'prbStatus',  width: 16 },
+      { header: 'เบอร์ พ.ร.บ.',     key: 'prbContact', width: 16 },
+      { header: 'วันต่อภาษี',        key: 'taxDate',    width: 18 },
+      { header: 'สถานะภาษี',         key: 'taxStatus',  width: 16 },
+      { header: 'วันหมดอายุประกัน',  key: 'insExpiry',  width: 18 },
+      { header: 'สถานะประกัน',       key: 'insStatus',  width: 16 },
+      { header: 'เบอร์ประกัน',       key: 'insContact', width: 16 },
+    ]
+
+    const vSL = { ACTIVE: 'พร้อมใช้งาน', IN_USE: 'กำลังใช้งาน', MAINTENANCE: 'ซ่อมบำรุง', INACTIVE: 'ปลดระวาง' }
+    data.forEach((v, i) => {
+      const row = ws.addRow({
+        no: i + 1,
+        type: v.type,
+        plate: v.licensePlate,
+        status: vSL[v.status] || v.status,
+        prbExpiry: fmtD(v.prbExpiry),
+        prbStatus: docLabel(v.prbExpiry),
+        prbContact: v.prbContact || '',
+        taxDate: fmtD(v.taxRenewalDate),
+        taxStatus: docLabel(v.taxRenewalDate),
+        insExpiry: fmtD(v.insExpiry),
+        insStatus: docLabel(v.insExpiry),
+        insContact: v.insContact || ''
+      })
+      // Color expired rows
+      const hasExpired = docStatus(v.prbExpiry) === 'expired' || docStatus(v.taxRenewalDate) === 'expired' || docStatus(v.insExpiry) === 'expired'
+      const hasWarning = docStatus(v.prbExpiry) === 'warning' || docStatus(v.taxRenewalDate) === 'warning' || docStatus(v.insExpiry) === 'warning'
+      const colCount = ws.columns.length
+      if (hasExpired) fillRow(row, colCount, 'FFFCE4D6')
+      else if (hasWarning) fillRow(row, colCount, 'FFFFF2CC')
+    })
+
+    excelHeader(ws, 'FFD6E4BC')
+    styleDataRows(ws)
+    await sendExcel(res, wb, `vehicles_docs_${new Date().toISOString().slice(0, 10)}.xlsx`)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ─── Export: Combined Multi-Sheet ────────────────────────────────────────────
+router.post('/combined', async (req, res) => {
+  try {
+    const { vehicleIds = [], topics = [], month, year, startDate: rawStart, endDate: rawEnd } = req.body
+    if (!topics.length) return res.status(400).json({ error: 'กรุณาเลือกอย่างน้อย 1 หัวข้อ' })
+
+    const vIds = vehicleIds.map(Number).filter(Boolean)
+    const vehicleIdWhere = vIds.length ? { in: vIds } : undefined
+
+    let startDate = null, endDate = null
+    if (rawStart) {
+      startDate = new Date(rawStart)
+      endDate   = rawEnd ? new Date(rawEnd + 'T23:59:59') : new Date(rawStart + 'T23:59:59')
+    } else if (year) {
+      if (month) {
+        startDate = new Date(Number(year), Number(month) - 1, 1)
+        endDate   = new Date(Number(year), Number(month), 0, 23, 59, 59)
+      } else {
+        startDate = new Date(Number(year), 0, 1)
+        endDate   = new Date(Number(year), 11, 31, 23, 59, 59)
+      }
+    }
+
+    const wb = new ExcelJS.Workbook()
+
+    // ── INSPECTIONS ───────────────────────────────────────────────────────────
+    if (topics.includes('inspections')) {
+      const where = {}
+      if (vehicleIdWhere) where.vehicleId = vehicleIdWhere
+      if (startDate) where.inspectionDate = { gte: startDate, lte: endDate }
+
+      const inspections = await prisma.inspection.findMany({
+        where,
+        include: {
+          vehicle: { select: { type: true, licensePlate: true } },
+          user: { select: { displayName: true, username: true } },
+          details: true
+        },
+        orderBy: [{ inspectionDate: 'asc' }, { vehicleId: 'asc' }]
+      })
+
+      const ws = wb.addWorksheet('การตรวจเช็ค')
+      ws.columns = [
+        { header: 'ลำดับ',             key: 'no',        width: 6  },
+        { header: 'วันที่ตรวจ',         key: 'date',      width: 16 },
+        { header: 'ยานพาหนะ',          key: 'vehicle',   width: 16 },
+        { header: 'ทะเบียน',            key: 'plate',     width: 14 },
+        { header: 'ผู้ตรวจ',            key: 'inspector', width: 16 },
+        { header: 'ปกติ (รายการ)',      key: 'normal',    width: 14 },
+        { header: 'ผิดปกติ (รายการ)',   key: 'abnormal',  width: 16 },
+        { header: 'รายการผิดปกติ',       key: 'notes',     width: 50 },
+      ]
+      inspections.forEach((ins, i) => {
+        const abnormalItems = ins.details.filter(d => d.status === 'ABNORMAL')
+        ws.addRow({
+          no: i + 1,
+          date: fmtD(ins.inspectionDate),
+          vehicle: ins.vehicle.type,
+          plate: ins.vehicle.licensePlate,
+          inspector: ins.user.displayName || ins.user.username,
+          normal: ins.details.filter(d => d.status === 'NORMAL').length,
+          abnormal: abnormalItems.length,
+          notes: abnormalItems.map(d => `${d.itemNumber}.${d.itemName}${d.abnormalNote ? ': ' + d.abnormalNote : ''}`).join('; ')
+        })
+      })
+      excelHeader(ws, 'FFD5E8F8')
+      styleDataRows(ws)
+    }
+
+    // ── BOOKINGS ──────────────────────────────────────────────────────────────
+    if (topics.includes('bookings')) {
+      const where = {}
+      if (vehicleIdWhere) where.vehicleId = vehicleIdWhere
+      if (startDate) where.checkoutDate = { gte: startDate, lte: endDate }
+
+      const bookings = await prisma.booking.findMany({
+        where,
+        include: {
+          vehicle: { select: { type: true, licensePlate: true } },
+          requester: { select: { displayName: true, username: true } },
+          driver: { select: { displayName: true, username: true } }
+        },
+        orderBy: { checkoutDate: 'asc' }
+      })
+
+      const ws = wb.addWorksheet('การเบิก-คืนรถ')
+      ws.columns = [
+        { header: 'ลำดับ',           key: 'no',          width: 6  },
+        { header: 'วันที่เบิก',       key: 'checkoutDate', width: 18 },
+        { header: 'ยานพาหนะ',        key: 'vehicle',      width: 16 },
+        { header: 'ทะเบียน',          key: 'plate',        width: 14 },
+        { header: 'สถานที่ปลายทาง',   key: 'destination',  width: 24 },
+        { header: 'วัตถุประสงค์',     key: 'purpose',      width: 20 },
+        { header: 'ผู้เบิก',          key: 'requester',    width: 16 },
+        { header: 'คนขับ',            key: 'driver',       width: 16 },
+        { header: 'ไมล์ออก (กม.)',    key: 'mileageOut',   width: 13 },
+        { header: 'ไมล์เข้า (กม.)',   key: 'mileageIn',    width: 13 },
+        { header: 'ระยะทาง (กม.)',    key: 'distance',     width: 14 },
+        { header: 'วันที่คืน',        key: 'returnDate',   width: 18 },
+        { header: 'สถานะ',            key: 'status',       width: 14 },
+        { header: 'หมายเหตุ',         key: 'note',         width: 22 },
+        { header: 'รูปไมล์ออก',       key: 'photoOut',     width: 12 },
+        { header: 'รูปไมล์เข้า',      key: 'photoIn',      width: 12 },
+      ]
+      const BSL = { CHECKED_OUT: 'กำลังใช้งาน', RETURNED: 'คืนแล้ว', CANCELLED: 'ยกเลิก' }
+      bookings.forEach((b, i) => ws.addRow({
+        no: i + 1, checkoutDate: fmtDT(b.checkoutDate),
+        vehicle: b.vehicle.type, plate: b.vehicle.licensePlate,
+        destination: b.destination, purpose: b.purpose || '',
+        requester: b.requester.displayName || b.requester.username,
+        driver: b.driver.displayName || b.driver.username,
+        mileageOut: b.mileageOut, mileageIn: b.mileageIn ?? '',
+        distance: b.distance ?? '', returnDate: fmtDT(b.returnDate),
+        status: BSL[b.status] || b.status, note: b.returnNote || '',
+        photoOut: photoCell(b.mileageOutPhoto),
+        photoIn: photoCell(b.mileageInPhoto),
+      }))
+      excelHeader(ws, 'FFBDD7EE')
+      styleDataRows(ws)
+    }
+
+    // ── FUELS ─────────────────────────────────────────────────────────────────
+    if (topics.includes('fuels')) {
+      const where = {}
+      if (vehicleIdWhere) where.vehicleId = vehicleIdWhere
+      if (startDate) where.createdAt = { gte: startDate, lte: endDate }
+
+      const fuels = await prisma.fuelLog.findMany({
+        where,
+        include: {
+          vehicle: { select: { type: true, licensePlate: true } },
+          user: { select: { displayName: true, username: true } }
+        },
+        orderBy: { createdAt: 'asc' }
+      })
+
+      const ws = wb.addWorksheet('เติมน้ำมัน')
+      ws.columns = [
+        { header: 'ลำดับ',          key: 'no',            width: 6  },
+        { header: 'วันที่',          key: 'date',          width: 18 },
+        { header: 'ยานพาหนะ',       key: 'vehicle',       width: 16 },
+        { header: 'ทะเบียน',         key: 'plate',         width: 14 },
+        { header: 'ไมล์ก่อนเติม',   key: 'mileageBefore', width: 14 },
+        { header: 'ไมล์หลังเติม',   key: 'mileageAfter',  width: 14 },
+        { header: 'ลิตร',            key: 'liters',        width: 10 },
+        { header: 'จำนวนเงิน (บ.)', key: 'amount',        width: 14 },
+        { header: 'ผู้บันทึก',       key: 'user',          width: 16 },
+        { header: 'หมายเหตุ',        key: 'note',          width: 20 },
+        { header: 'รูปไมล์',         key: 'photoMileage',  width: 12 },
+        { header: 'รูปเกจ',          key: 'photoGauge',    width: 12 },
+        { header: 'รูปหัวจ่าย',      key: 'photoPump',     width: 12 },
+        { header: 'รูปใบเสร็จ',      key: 'photoReceipt',  width: 12 },
+      ]
+      fuels.forEach((f, i) => ws.addRow({
+        no: i + 1, date: fmtDT(f.createdAt),
+        vehicle: f.vehicle.type, plate: f.vehicle.licensePlate,
+        mileageBefore: f.mileageBefore, mileageAfter: f.mileageAfter ?? '',
+        liters: f.liters, amount: f.amount,
+        user: f.user.displayName || f.user.username, note: f.note || '',
+        photoMileage: photoCell(f.mileagePhotoAfter || f.mileagePhotoBefore),
+        photoGauge: photoCell(f.gaugePhotoAfter || f.gaugePhotoBefore),
+        photoPump: photoCell(f.pumpPhoto),
+        photoReceipt: photoCell(f.receiptPhoto),
+      }))
+      const totalLiters = fuels.reduce((s, f) => s + f.liters, 0)
+      const totalAmount = fuels.reduce((s, f) => s + f.amount, 0)
+      const sumRow = ws.addRow(['', '', '', 'รวม', '', '', totalLiters.toFixed(2), totalAmount.toFixed(2), '', ''])
+      sumRow.font = { bold: true, name: 'TH Sarabun New', size: 11 }
+      fillRow(sumRow, ws.columns.length, 'FFE2EFDA')
+      excelHeader(ws, 'FF9DC3E6')
+      styleDataRows(ws)
+    }
+
+    // ── REPAIRS ───────────────────────────────────────────────────────────────
+    if (topics.includes('repairs')) {
+      const where = {}
+      if (vehicleIdWhere) where.vehicleId = vehicleIdWhere
+      if (startDate) where.createdAt = { gte: startDate, lte: endDate }
+
+      const repairs = await prisma.repairRequest.findMany({
+        where,
+        include: {
+          vehicle: { select: { type: true, licensePlate: true } },
+          user: { select: { displayName: true, username: true } },
+          approvedBy: { select: { displayName: true, username: true } }
+        },
+        orderBy: { createdAt: 'asc' }
+      })
+
+      const ws = wb.addWorksheet('แจ้งซ่อม')
+      ws.columns = [
+        { header: 'ลำดับ',              key: 'no',          width: 6  },
+        { header: 'วันที่แจ้ง',          key: 'date',        width: 18 },
+        { header: 'ยานพาหนะ',           key: 'vehicle',     width: 16 },
+        { header: 'ทะเบียน',             key: 'plate',       width: 14 },
+        { header: 'หัวข้อ',              key: 'title',       width: 24 },
+        { header: 'รายละเอียด',          key: 'detail',      width: 30 },
+        { header: 'วงเงิน (บ.)',         key: 'cost',        width: 12 },
+        { header: 'สถานะ',               key: 'status',      width: 14 },
+        { header: 'ผู้แจ้ง',              key: 'user',        width: 16 },
+        { header: 'ผู้อนุมัติ',           key: 'approver',    width: 16 },
+        { header: 'วันที่อนุมัติ',        key: 'approvedAt',  width: 18 },
+        { header: 'หมายเหตุผู้อนุมัติ',  key: 'approverNote', width: 24 },
+        { header: 'เอกสาร/รูปประกอบ',   key: 'photoDoc',     width: 16 },
+      ]
+      const RSL = { PENDING: 'รออนุมัติ', APPROVED: 'อนุมัติแล้ว', REJECTED: 'ไม่อนุมัติ', COMPLETED: 'เสร็จสิ้น' }
+      repairs.forEach((r, i) => ws.addRow({
+        no: i + 1, date: fmtDT(r.createdAt),
+        vehicle: r.vehicle.type, plate: r.vehicle.licensePlate,
+        title: r.title, detail: r.detail, cost: r.estimatedCost ?? '',
+        status: RSL[r.status] || r.status,
+        user: r.user.displayName || r.user.username,
+        approver: r.approvedBy ? (r.approvedBy.displayName || r.approvedBy.username) : '',
+        approvedAt: fmtDT(r.approvedAt), approverNote: r.approverNote || '',
+        photoDoc: photoCell(r.documentPath),
+      }))
+      excelHeader(ws, 'FFFCE4D6')
+      styleDataRows(ws)
+    }
+
+    // ── VEHICLE DOCS ──────────────────────────────────────────────────────────
+    if (topics.includes('docs')) {
+      const where = vIds.length ? { id: { in: vIds } } : {}
+      const vehicles = await prisma.vehicle.findMany({ where, orderBy: { licensePlate: 'asc' } })
+
+      function docStatus(dateStr) {
+        if (!dateStr) return 'none'
+        const days = Math.floor((new Date(dateStr) - new Date()) / 86400000)
+        if (days < 0) return 'expired'
+        if (days <= 30) return 'warning'
+        return 'ok'
+      }
+      function docLabel(dateStr) {
+        const s = docStatus(dateStr)
+        if (s === 'none') return 'ไม่ระบุ'
+        const days = Math.floor((new Date(dateStr) - new Date()) / 86400000)
+        if (s === 'expired') return `หมดแล้ว (${Math.abs(days)} วัน)`
+        if (s === 'warning') return `ใกล้หมด (${days} วัน)`
+        return `ปกติ (${days} วัน)`
+      }
+
+      const ws = wb.addWorksheet('เอกสารยานพาหนะ')
+      ws.columns = [
+        { header: 'ลำดับ',              key: 'no',        width: 6  },
+        { header: 'ประเภท',             key: 'type',      width: 18 },
+        { header: 'ทะเบียน',             key: 'plate',     width: 16 },
+        { header: 'สถานะรถ',             key: 'status',    width: 14 },
+        { header: 'วันหมดอายุ พ.ร.บ.',  key: 'prbExpiry', width: 18 },
+        { header: 'สถานะ พ.ร.บ.',       key: 'prbStatus', width: 16 },
+        { header: 'วันต่อภาษี',          key: 'taxDate',   width: 18 },
+        { header: 'สถานะภาษี',           key: 'taxStatus', width: 16 },
+        { header: 'วันหมดอายุประกัน',    key: 'insExpiry', width: 18 },
+        { header: 'สถานะประกัน',         key: 'insStatus', width: 16 },
+      ]
+      const vSL = { ACTIVE: 'พร้อมใช้งาน', IN_USE: 'กำลังใช้งาน', MAINTENANCE: 'ซ่อมบำรุง', INACTIVE: 'ปลดระวาง' }
+      vehicles.forEach((v, i) => {
+        const row = ws.addRow({
+          no: i + 1, type: v.type, plate: v.licensePlate,
+          status: vSL[v.status] || v.status,
+          prbExpiry: fmtD(v.prbExpiry), prbStatus: docLabel(v.prbExpiry),
+          taxDate: fmtD(v.taxRenewalDate), taxStatus: docLabel(v.taxRenewalDate),
+          insExpiry: fmtD(v.insExpiry), insStatus: docLabel(v.insExpiry),
+        })
+        const hasExpired = ['prbExpiry','taxRenewalDate','insExpiry'].some(k => docStatus(v[k]) === 'expired')
+        const hasWarning = ['prbExpiry','taxRenewalDate','insExpiry'].some(k => docStatus(v[k]) === 'warning')
+        if (hasExpired) fillRow(row, ws.columns.length, 'FFFCE4D6')
+        else if (hasWarning) fillRow(row, ws.columns.length, 'FFFFF2CC')
+      })
+      excelHeader(ws, 'FFD6E4BC')
+      styleDataRows(ws)
+    }
+
+    if (wb.worksheets.length === 0) return res.status(400).json({ error: 'ไม่มีข้อมูลสำหรับ Export' })
+
+    let filename
+    if (rawStart && rawStart === rawEnd) {
+      filename = `export_${rawStart}.xlsx`
+    } else if (rawStart) {
+      filename = `export_${rawStart}_ถึง_${rawEnd || rawStart}.xlsx`
+    } else {
+      const monthLabel = month ? THAI_MONTHS[Number(month) - 1] : 'ทั้งปี'
+      filename = month ? `export_${monthLabel}_${year}.xlsx` : `export_ปี${year}.xlsx`
+    }
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`)
+    await wb.xlsx.write(res)
+    res.end()
+  } catch (err) {
+    console.error('Combined export error:', err)
     res.status(500).json({ error: err.message })
   }
 })

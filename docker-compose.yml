@@ -1,0 +1,32 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vehicle-backend
+    ports:
+      - "8007:8007"
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    networks:
+      - vehicle-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=https://api.vehicle.semedcheckup.com
+    container_name: vehicle-frontend
+    ports:
+      - "3007:3007"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - vehicle-network
+
+networks:
+  vehicle-network:
+    driver: bridge

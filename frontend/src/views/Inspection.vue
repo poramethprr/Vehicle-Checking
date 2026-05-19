@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="relative bg-linear-to-r from-blue-600 to-indigo-600 rounded-2xl px-6 py-5 mb-6 overflow-hidden shadow-md shadow-blue-200">
+    <div class="relative bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-950 dark:to-indigo-950 rounded-2xl px-6 py-5 mb-6 overflow-hidden shadow-md shadow-blue-200 dark:shadow-black/20">
       <div class="absolute -top-6 -right-6 w-28 h-28 bg-white/10 rounded-full pointer-events-none"></div>
       <div class="relative flex items-center gap-3">
         <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
@@ -14,20 +14,20 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-linear-to-br from-white to-blue-50/40 rounded-2xl shadow-lg shadow-blue-200/40 border border-blue-200 p-5 sm:p-6 mb-5">
+    <div class="bg-linear-to-br from-white to-blue-50/40 dark:from-slate-800 dark:to-slate-800 rounded-2xl shadow-lg shadow-blue-200/40 border border-blue-200 dark:border-slate-700 p-5 sm:p-6 mb-5">
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+          <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
             <CalendarIcon class="w-3.5 h-3.5 inline -mt-0.5 mr-0.5" /> วันที่ตรวจ
           </label>
           <div class="relative">
             <CalendarIcon class="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input v-model="inspectionDate" type="date"
-              class="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm shadow-sm hover:border-blue-400" />
+              class="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm shadow-sm hover:border-blue-400 dark:text-white dark:placeholder-slate-400" />
           </div>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+          <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
             <TruckIcon class="w-3.5 h-3.5 inline -mt-0.5 mr-0.5" /> ยานพาหนะ
           </label>
           <AppSelect v-model="selectedVehicleId" :options="vehicleOptions" placeholder="-- เลือกยานพาหนะ --" :icon="TruckIcon" />
@@ -43,47 +43,47 @@
     </div>
 
     <!-- Checklist -->
-    <div class="bg-white rounded-2xl shadow-xl shadow-slate-500/25 border border-gray-200 overflow-hidden" v-if="selectedVehicleId && inspectionDate">
-      <div class="px-5 sm:px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <h3 class="font-bold text-slate-800 flex items-center gap-2">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-500/25 dark:shadow-black/30 border border-gray-200 dark:border-slate-700 overflow-hidden" v-if="selectedVehicleId && inspectionDate">
+      <div class="px-5 sm:px-6 py-4 border-b border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
           <ClipboardDocumentCheckIcon class="w-5 h-5 text-blue-500" />
           รายการตรวจเช็ค
-          <span class="text-slate-400 font-normal text-sm">{{ checklistItems.length }} รายการ</span>
+          <span class="text-slate-400 dark:text-slate-500 font-normal text-sm">{{ checklistItems.length }} รายการ</span>
         </h3>
-        <div class="flex items-center gap-4 text-xs text-slate-400">
+        <div class="flex items-center gap-4 text-xs text-slate-400 dark:text-slate-500">
           <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-emerald-200"></span> ปกติ {{ normalCount }}</span>
           <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-red-200"></span> ผิดปกติ {{ abnormalCount }}</span>
         </div>
       </div>
 
       <!-- Progress bar -->
-      <div class="h-1 bg-slate-100">
+      <div class="h-1 bg-slate-100 dark:bg-slate-700">
         <div class="h-full bg-linear-to-r from-emerald-400 to-emerald-500 transition-all duration-500" :style="{ width: progressPercent + '%' }"></div>
       </div>
 
       <!-- Mobile: Card layout -->
-      <div class="sm:hidden divide-y divide-gray-100">
+      <div class="sm:hidden divide-y divide-gray-100 dark:divide-slate-700">
         <div v-for="item in checklistItems" :key="item.number" class="p-4">
           <div class="flex items-start gap-3 mb-3">
             <span :class="[
               'w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 transition-colors',
-              item.status === 'ABNORMAL' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-500'
+              item.status === 'ABNORMAL' ? 'bg-red-100 text-red-600' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
             ]">{{ item.number }}</span>
-            <span class="text-sm font-medium text-slate-700 leading-snug pt-1">{{ item.name }}</span>
+            <span class="text-sm font-medium text-slate-700 dark:text-slate-200 leading-snug pt-1">{{ item.name }}</span>
           </div>
           <div class="flex gap-2 mb-2">
             <button @click="item.status = 'NORMAL'"
               :class="['flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all border-2 flex items-center justify-center gap-1.5',
                 item.status === 'NORMAL'
                   ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-200'
-                  : 'bg-white text-slate-400 border-slate-200 hover:border-emerald-300 active:scale-95']">
+                  : 'bg-white dark:bg-slate-700 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-600 hover:border-emerald-300 active:scale-95']">
               <CheckCircleIcon class="w-4.5 h-4.5" /> ปกติ
             </button>
             <button @click="item.status = 'ABNORMAL'"
               :class="['flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all border-2 flex items-center justify-center gap-1.5',
                 item.status === 'ABNORMAL'
                   ? 'bg-red-500 text-white border-red-500 shadow-md shadow-red-200'
-                  : 'bg-white text-slate-400 border-slate-200 hover:border-red-300 active:scale-95']">
+                  : 'bg-white dark:bg-slate-700 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-600 hover:border-red-300 active:scale-95']">
               <XCircleIcon class="w-4.5 h-4.5" /> ผิดปกติ
             </button>
           </div>
@@ -92,7 +92,7 @@
             <div v-if="item.status === 'ABNORMAL'" class="overflow-hidden">
               <textarea v-model="item.abnormalNote" rows="2"
                 placeholder="ระบุรายละเอียดความผิดปกติ..."
-                class="w-full px-3.5 py-2.5 bg-red-50 border border-red-200 rounded-xl text-sm focus:ring-2 focus:ring-red-400 focus:border-transparent outline-none placeholder-red-300 mt-1"></textarea>
+                class="w-full px-3.5 py-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-xl text-sm focus:ring-2 focus:ring-red-400 focus:border-transparent outline-none placeholder-red-300 dark:placeholder-red-700 dark:text-red-200 mt-1"></textarea>
             </div>
           </transition>
         </div>
@@ -102,37 +102,37 @@
       <div class="hidden sm:block">
         <table class="w-full">
           <thead>
-            <tr class="bg-slate-50/50">
-              <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 uppercase w-14">ที่</th>
-              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase">รายละเอียดการตรวจสอบ</th>
-              <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 uppercase w-48">สถานะ</th>
-              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 uppercase">หมายเหตุ</th>
+            <tr class="bg-slate-50/50 dark:bg-slate-700/30">
+              <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase w-14">ที่</th>
+              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">รายละเอียดการตรวจสอบ</th>
+              <th class="text-center py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase w-48">สถานะ</th>
+              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase">หมายเหตุ</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100">
+          <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
             <tr v-for="item in checklistItems" :key="item.number"
-              :class="['transition-colors', item.status === 'ABNORMAL' ? 'bg-red-50/30' : 'hover:bg-slate-50/50']">
+              :class="['transition-colors', item.status === 'ABNORMAL' ? 'bg-red-50/30 dark:bg-red-900/10' : 'hover:bg-slate-50/50 dark:hover:bg-slate-700/30']">
               <td class="text-center py-3 px-4">
                 <span :class="[
                   'w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold mx-auto transition-colors',
-                  item.status === 'ABNORMAL' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-500'
+                  item.status === 'ABNORMAL' ? 'bg-red-100 text-red-600' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
                 ]">{{ item.number }}</span>
               </td>
-              <td class="py-3 px-4 text-sm text-slate-700">{{ item.name }}</td>
+              <td class="py-3 px-4 text-sm text-slate-700 dark:text-slate-200">{{ item.name }}</td>
               <td class="py-3 px-4">
                 <div class="flex gap-1.5 justify-center">
                   <button @click="item.status = 'NORMAL'"
                     :class="['group px-4 py-1.5 rounded-lg text-xs font-semibold transition-all border flex items-center gap-1',
                       item.status === 'NORMAL'
                         ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm shadow-emerald-200'
-                        : 'bg-white text-slate-400 border-slate-200 hover:border-emerald-300 hover:text-emerald-500']">
+                        : 'bg-white dark:bg-slate-700 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-600 hover:border-emerald-300 hover:text-emerald-500']">
                     <CheckCircleIcon class="w-3.5 h-3.5" /> ปกติ
                   </button>
                   <button @click="item.status = 'ABNORMAL'"
                     :class="['group px-4 py-1.5 rounded-lg text-xs font-semibold transition-all border flex items-center gap-1',
                       item.status === 'ABNORMAL'
                         ? 'bg-red-500 text-white border-red-500 shadow-sm shadow-red-200'
-                        : 'bg-white text-slate-400 border-slate-200 hover:border-red-300 hover:text-red-500']">
+                        : 'bg-white dark:bg-slate-700 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-600 hover:border-red-300 hover:text-red-500']">
                     <XCircleIcon class="w-3.5 h-3.5" /> ผิดปกติ
                   </button>
                 </div>
@@ -141,7 +141,7 @@
                 <transition enter-active-class="transition duration-200" enter-from-class="opacity-0" enter-to-class="opacity-100">
                   <textarea v-if="item.status === 'ABNORMAL'" v-model="item.abnormalNote" rows="1"
                     placeholder="ระบุรายละเอียด..."
-                    class="w-full px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg text-sm focus:ring-2 focus:ring-red-400 focus:border-transparent outline-none placeholder-red-300"></textarea>
+                    class="w-full px-3 py-1.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg text-sm focus:ring-2 focus:ring-red-400 focus:border-transparent outline-none placeholder-red-300 dark:placeholder-red-700 dark:text-red-200"></textarea>
                 </transition>
               </td>
             </tr>
@@ -150,9 +150,9 @@
       </div>
 
       <!-- Desktop save bar -->
-      <div class="hidden sm:block px-6 py-4 bg-slate-50/50 border-t border-gray-200">
+      <div class="hidden sm:block px-6 py-4 bg-slate-50/50 dark:bg-slate-700/30 border-t border-gray-200 dark:border-slate-700">
         <div class="flex items-center justify-between gap-3">
-          <div class="text-xs text-slate-400">
+          <div class="text-xs text-slate-400 dark:text-slate-500">
             ปกติ <span class="font-bold text-emerald-500">{{ normalCount }}</span> · ผิดปกติ <span class="font-bold text-red-500">{{ abnormalCount }}</span> รายการ
           </div>
           <button @click="saveInspection" :disabled="saving"
@@ -172,16 +172,16 @@
 
     <!-- Mobile sticky save bar -->
     <Teleport to="body">
-      <div v-if="selectedVehicleId && inspectionDate" class="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 px-4 py-3 shadow-xl">
+      <div v-if="selectedVehicleId && inspectionDate" class="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 px-4 py-3 shadow-xl">
         <div class="flex items-center gap-3">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-1">
-              <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div class="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                 <div class="h-full bg-linear-to-r from-emerald-400 to-emerald-500 transition-all duration-500" :style="{ width: progressPercent + '%' }"></div>
               </div>
-              <span class="text-xs font-semibold text-slate-500 shrink-0">{{ normalCount + abnormalCount }}/{{ checklistItems.length }}</span>
+              <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 shrink-0">{{ normalCount + abnormalCount }}/{{ checklistItems.length }}</span>
             </div>
-            <div class="text-xs text-slate-400">
+            <div class="text-xs text-slate-400 dark:text-slate-500">
               <span class="text-emerald-600 font-semibold">{{ normalCount }} ปกติ</span>
               <template v-if="abnormalCount"> · <span class="text-red-500 font-semibold">{{ abnormalCount }} ผิดปกติ</span></template>
             </div>
@@ -212,9 +212,10 @@ import AppSelect from '../components/AppSelect.vue'
 import api from '../stores/api'
 import { auth } from '../stores/auth'
 import { swalSuccess, swalError, swalInfo } from '../stores/swal'
+import { todayLocalStr, toLocalDateStr } from '../stores/date'
 
 const route = useRoute()
-const inspectionDate = ref(route.query.date || new Date().toISOString().slice(0, 10))
+const inspectionDate = ref(route.query.date || todayLocalStr())
 const selectedVehicleId = ref('')
 const vehicles = ref([])
 const saving = ref(false)
@@ -249,11 +250,11 @@ function resetChecklist() {
 async function loadExisting() {
   resetChecklist()
   try {
-    const date = new Date(inspectionDate.value)
+    const [y, m] = inspectionDate.value.split('-').map(Number)
     const { data } = await api.get('/inspections', {
-      params: { vehicleId: selectedVehicleId.value, month: date.getMonth() + 1, year: date.getFullYear() }
+      params: { vehicleId: selectedVehicleId.value, month: m, year: y }
     })
-    const existing = data.find(ins => new Date(ins.inspectionDate).toISOString().slice(0, 10) === inspectionDate.value)
+    const existing = data.find(ins => toLocalDateStr(ins.inspectionDate) === inspectionDate.value)
     if (existing) {
       editingId.value = existing.id
       for (const detail of existing.details) {
@@ -287,7 +288,7 @@ async function saveInspection() {
     // Reset form after successful save
     resetChecklist()
     selectedVehicleId.value = ''
-    inspectionDate.value = new Date().toISOString().slice(0, 10)
+    inspectionDate.value = todayLocalStr()
   } catch (err) {
     swalError('เกิดข้อผิดพลาด', err.response?.data?.error || 'ไม่สามารถบันทึกได้')
   } finally { saving.value = false }
